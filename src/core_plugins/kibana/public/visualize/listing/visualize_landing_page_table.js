@@ -2,10 +2,11 @@ import React from 'react';
 
 import { VisualizeConstants } from '../visualize_constants';
 import { VisualizeItemPrompt } from './visualize_item_prompt';
-import { SelectedIds } from 'ui/saved_object_table/selected_ids';
-import { Pager } from 'ui/pager/pager';
-import { PagerActions } from 'ui/pager/pager_actions';
-import { ItemSelectionActions } from 'ui/saved_object_table/item_selection_actions';
+import {
+  areAllItemsSelected,
+  toggleItem,
+  toggleAll,
+} from 'ui/saved_object_table/item_selection_actions';
 import { sortItems, getFlippedSortOrder } from 'ui/saved_object_table/sort_items';
 import { TITLE_COLUMN_ID } from 'ui/saved_object_table/get_title_column';
 import { getCheckBoxColumn } from 'ui/saved_object_table/get_checkbox_column';
@@ -21,6 +22,34 @@ import {
   LandingPageToolBarFooter
 } from 'ui_framework/components';
 
+class Pager {
+  constructor(itemsPerPage) {
+    this.itemsPerPage = itemsPerPage;
+  }
+
+  canPagePrevious(currentPage) {
+    return currentPage > 0;
+  }
+
+  canPageNext(itemsCount, currentPage) {
+    const pagesCount = this.getPagesCount(itemsCount);
+    return currentPage < pagesCount - 1;
+  }
+
+  getItemsOnPage(items, currentPage) {
+    const startIndex = currentPage * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    return items.filter((item, index) => (
+      index >= startIndex
+      && index < endIndex
+    ));
+  }
+
+  getPagesCount(itemsCount) {
+    return Math.ceil(itemsCount / this.itemsPerPage);
+  }
+}
+
 export class VisualizeLandingPageTable extends React.Component {
   constructor(props) {
     super(props);
@@ -30,8 +59,11 @@ export class VisualizeLandingPageTable extends React.Component {
       items: [],
       sortedColumn: undefined,
       sortOrder: SortOrder.ASC,
-      selectedIds: new SelectedIds()
+      selectedIds: [],
+      currentPage: 0,
     };
+
+    this.pager = new Pager(2);
   }
 
   componentDidMount() {
@@ -42,11 +74,13 @@ export class VisualizeLandingPageTable extends React.Component {
     const PAGE_SIZE = 3;
     this.props.fetch(newFilter).then((results) => {
       const items = results.hits;
+      const pagesCount = this.pager.getPagesCount(items.length);
+
       this.setState({
         items,
         isFetchingItems: false,
-        pager: new Pager(items.length, PAGE_SIZE, 1),
-        selectedIds: new SelectedIds()
+        currentPage: Math.min(this.state.currentPage, pagesCount - 1),
+        selectedIds: [],
       });
     });
   };
@@ -63,27 +97,27 @@ export class VisualizeLandingPageTable extends React.Component {
     }
 
     const sortedItems = sortItems(items, sortedColumn, sortOrder);
-    ItemSelectionActions.deselectAll(selectedIds);
+
     this.setState({
       sortedColumn,
       sortOrder,
-      selectedIds,
+      selectedIds: [],
       items: sortedItems
     });
   };
 
   turnToNextPage = () => {
-    const { pager, selectedIds } = this.state;
-    ItemSelectionActions.deselectAll(selectedIds);
-    PagerActions.nextPage(pager);
-    this.setState({ pager, selectedIds });
+    this.setState({
+      currentPage: this.state.currentPage + 1,
+      selectedIds: [],
+    });
   };
 
   turnToPreviousPage = () => {
-    const { pager, selectedIds } = this.state;
-    ItemSelectionActions.deselectAll(selectedIds);
-    PagerActions.previousPage(pager);
-    this.setState({ pager, selectedIds });
+    this.setState({
+      currentPage: this.state.currentPage - 1,
+      selectedIds: [],
+    });
   };
 
   onSortByTitle = () => {
@@ -95,15 +129,22 @@ export class VisualizeLandingPageTable extends React.Component {
   };
 
   onToggleItem = (item) => {
-    const selectedIds = ItemSelectionActions.toggleItem(this.state.selectedIds, item);
-    this.setState({ selectedIds });
+    this.setState({
+      selectedIds: toggleItem(this.state.selectedIds, item.id),
+    });
   };
 
   onToggleAll = () => {
-    const pageOfItems = PagerActions.calculateItemsOnPage(this.state.pager, this.state.items);
-    const selectedIds = ItemSelectionActions.toggleAll(this.state.selectedIds, pageOfItems);
-    this.setState({ selectedIds });
+    const pageOfItems = this.pager.getItemsOnPage(this.state.items, this.state.currentPage);
+    const pageOfItemIds = pageOfItems.map(item => item.id);
+    this.setState({
+      selectedIds: toggleAll(this.state.selectedIds, pageOfItemIds),
+    });
   };
+
+  hasPreviousPage = () => this.pager.canPagePrevious(this.state.currentPage);
+
+  hasNextPage = () => this.pager.canPageNext(this.state.items.length, this.state.currentPage);
 
   getEditUrlForItem = (item) => {
     return this.props.kbnUrl.eval(`#${VisualizeConstants.EDIT_PATH}/{{id}}`, { id: item.id });
@@ -122,9 +163,10 @@ export class VisualizeLandingPageTable extends React.Component {
   }
 
   getAreAllItemsSelected() {
-    const { selectedIds, items, pager } = this.state;
-    const pageOfItems = PagerActions.calculateItemsOnPage(pager, items);
-    return selectedIds.areAllItemsSelected(pageOfItems);
+    const { selectedIds, items, currentPage } = this.state;
+    const pageOfItems = this.pager.getItemsOnPage(items, currentPage);
+    const pageOfItemIds = pageOfItems.map(item => item.id);
+    return areAllItemsSelected(selectedIds, pageOfItemIds);
   }
 
   getVisualizeColumns() {
@@ -139,7 +181,7 @@ export class VisualizeLandingPageTable extends React.Component {
   onDelete = () => {
     const { deleteItems } = this.props;
     const { selectedIds, filter } = this.state;
-    deleteItems(selectedIds.selectedIds).then((didDelete) => {
+    deleteItems(selectedIds).then((didDelete) => {
       if (didDelete) {
         this.onFilter(filter);
       }
@@ -147,15 +189,15 @@ export class VisualizeLandingPageTable extends React.Component {
   };
 
   getActionButtons() {
-    return this.state.selectedIds.getSelectedItemsCount() > 0
+    return this.state.selectedIds.length > 0
       ? <DeleteButton onClick={this.onDelete} />
       : <CreateButtonLink href={'#' + VisualizeConstants.WIZARD_STEP_1_PAGE_PATH} />;
   }
 
   getTableContents() {
-    const { isFetchingItems, pager, items } = this.state;
+    const { isFetchingItems, currentPage, items } = this.state;
     if (isFetchingItems) return null;
-    const pageOfItems = PagerActions.calculateItemsOnPage(pager, items);
+    const pageOfItems = this.pager.getItemsOnPage(items, currentPage);
     const columns = this.getVisualizeColumns();
 
     return pageOfItems.length > 0
@@ -170,7 +212,11 @@ export class VisualizeLandingPageTable extends React.Component {
       <LandingPageToolBar
         filter={filter}
         onFilter={this.onFilter}
-        pagerState={pager}
+        startNumber={0}
+        endNumber={0}
+        totalItems={10}
+        hasPreviousPage={this.hasPreviousPage}
+        hasNextPage={this.hasNextPage}
         onNextPage={this.turnToNextPage}
         onPreviousPage={this.turnToPreviousPage}
         actionButtons={this.getActionButtons()}/>
@@ -178,10 +224,14 @@ export class VisualizeLandingPageTable extends React.Component {
         this.getTableContents()
       }
       <LandingPageToolBarFooter
-        pagerState={pager}
+        startNumber={0}
+        endNumber={0}
+        totalItems={10}
+        hasPreviousPage={this.hasPreviousPage}
+        hasNextPage={this.hasNextPage}
         onNextPage={this.turnToNextPage}
         onPreviousPage={this.turnToPreviousPage}
-        selectedItemsCount={selectedIds.getSelectedItemsCount()}
+        selectedItemsCount={selectedIds.length}
       />
     </div>;
   }

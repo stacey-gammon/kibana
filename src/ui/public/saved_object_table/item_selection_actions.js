@@ -1,41 +1,22 @@
-export class ItemSelectionActions {
-  static deselectAll(selectedIds) {
-    selectedIds.selectedIds.splice(0, selectedIds.selectedIds.length);
+export function areAllItemsSelected(selectedIds, itemIds) {
+  return itemIds.every(id => selectedIds.indexOf(id) !== -1);
+}
+
+export function toggleItem(selectedIds, itemId) {
+  const itemIndex = selectedIds.indexOf(itemId);
+  if (itemIndex === -1) {
+    return selectedIds.concat(itemId);
   }
 
-  static selectAll(selectedIds, items) {
-    this.deselectAll(selectedIds);
-    items.forEach(item => this.selectItem(selectedIds, item));
+  const copy = selectedIds.slice(0);
+  copy.splice(itemIndex, 1);
+  return copy;
+}
+
+export function toggleAll(selectedIds, itemIds) {
+  if (areAllItemsSelected(selectedIds, itemIds)) {
+    return [];
   }
 
-  static toggleItem(selectedIds, item) {
-    if (selectedIds.isItemSelected(item)) {
-      this.deselectItem(selectedIds, item);
-    } else {
-      this.selectItem(selectedIds, item);
-    }
-    return selectedIds;
-  }
-
-  static toggleAll(selectedIds, items) {
-    if (selectedIds.areAllItemsSelected(items)) {
-      this.deselectAll(selectedIds);
-    } else {
-      this.selectAll(selectedIds, items);
-    }
-    return selectedIds;
-  }
-
-  static selectItem(selectedIds, item) {
-    if (!selectedIds.isItemSelected(item)) {
-      selectedIds.selectedIds.push(item.id);
-    }
-  }
-
-  static deselectItem(selectedIds, item) {
-    if (selectedIds.isItemSelected(item)) {
-      const index = selectedIds.indexOf(item);
-      selectedIds.selectedIds.splice(index, 1);
-    }
-  }
+  return itemIds.slice(0);
 }

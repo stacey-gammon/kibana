@@ -1404,6 +1404,7 @@ body {
   text-align: right; }
 
 .kuiTableSortIcon {
+  margin-left: 5px;
   pointer-events: none; }
 
 .kuiTableRow:hover .kuiTableRowHoverReveal {
@@ -1464,6 +1465,9 @@ body {
   .kuiTableRowCell--checkBox .kuiTableRowCell__liner {
     overflow: visible;
     /* 3 */ }
+
+.kuiTableHeaderCell__sortable {
+  cursor: pointer; }
 
 .kuiTabs {
   display: -webkit-box;

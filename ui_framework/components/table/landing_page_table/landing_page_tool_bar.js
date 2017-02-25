@@ -8,19 +8,28 @@ import {
 export function LandingPageToolBar({
     filter,
     onFilter,
-    pagerState,
+    hasPreviousPage,
+    hasNextPage,
     onNextPage,
     onPreviousPage,
-    actionButtons }) {
+    actionButtons,
+    startNumber,
+    endNumber,
+    totalItems,
+}) {
   const toolBarSections = [
     <KuiToolBarSearchBox filter={filter} onFilter={onFilter}/>,
-    actionButtons
+    actionButtons,
+    <KuiToolBarPager
+      startNumber={startNumber}
+      endNumber={endNumber}
+      totalItems={totalItems}
+      hasPreviousPage={hasPreviousPage}
+      hasNextPage={hasNextPage}
+      onNextPage={onNextPage}
+      onPreviousPage={onPreviousPage}
+    />,
   ];
-
-  if (pagerState) {
-    toolBarSections.push(
-      <KuiToolBarPager pagerState={pagerState} onNextPage={onNextPage} onPreviousPage={onPreviousPage}/>);
-  }
 
   return <KuiSectionedToolBar sections={toolBarSections} />;
 }
@@ -28,8 +37,12 @@ export function LandingPageToolBar({
 LandingPageToolBar.propTypes = {
   filter: React.PropTypes.string,
   onFilter: React.PropTypes.func.isRequired,
-  actionButtons: React.PropTypes.node.isRequired,
-  pagerState: React.PropTypes.any,
+  actionButtons: React.PropTypes.node,
+  hasPreviousPage: React.PropTypes.func,
+  hasNextPage: React.PropTypes.func,
   onNextPage: React.PropTypes.func,
-  onPreviousPage: React.PropTypes.func
+  onPreviousPage: React.PropTypes.func,
+  startNumber: React.PropTypes.number,
+  endNumber: React.PropTypes.number,
+  totalItems: React.PropTypes.number,
 };
