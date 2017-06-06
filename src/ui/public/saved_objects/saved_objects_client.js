@@ -47,16 +47,30 @@ export class SavedObjectsClient {
     return this._request('PUT', this._getUrl([type, id]), body);
   }
 
-  create(type, body) {
-    if (!type || !body) {
-      return this._PromiseCtor.reject(new Error('requires type and body'));
+  /**
+   * @param {string} type
+   * @param {object} attributes
+   * @returns {promise}
+  */
+  create(type, attributes) {
+    if (!type || !attributes) {
+      return this._PromiseCtor.reject(new Error('requires type and attributes'));
     }
 
     const url = this._getUrl([type]);
 
-    return this._request('POST', url, body);
+    return this._request('POST', url, { attributes });
   }
 
+  /**
+   * @param {object} options
+   * @param {string} options.type
+   * @param {string} options.search
+   * @param {integer} options.page
+   * @param {integer} options.perPage
+   * @param {array} option.fields
+   * @returns {promise}
+   */
   find(options = {}) {
     const url = this._getUrl([options.type], keysToSnakeCaseShallow(options));
 
