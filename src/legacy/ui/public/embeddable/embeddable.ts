@@ -18,7 +18,8 @@
  */
 
 import { Adapters } from 'ui/inspector';
-import { ContainerState } from './types';
+import { ContainerState } './containers';
+import { Transformer } from './transformer';
 
 export interface EmbeddableMetadata {
   // TODO: change to an array, embeddables should be able to specify multiple index patterns they use. Also
@@ -45,6 +46,8 @@ export interface EmbeddableMetadata {
 }
 
 export abstract class Embeddable {
+  public inputTransformations = Transformer[];
+
   public readonly metadata: EmbeddableMetadata = {};
 
   // TODO: Make title and editUrl required and move out of options parameter.

@@ -4,14 +4,14 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-function PanelActions(kibana: any) {
+import { resolve } from 'path';
+
+export function panelActions(kibana: any) {
   return new kibana.Plugin({
+    id: 'panel_actions',
     uiExports: {
-      contextMenuActions: ['plugins/panel_actions/time_picker'],
+      contextMenuActions: ['plugins/panel_actions/plugin'],
     },
+    publicDir: resolve(__dirname, 'public'),
   });
 }
-
-module.exports = (kibana: any) => {
-  return [PanelActions(kibana)];
-};

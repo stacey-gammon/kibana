@@ -44,39 +44,7 @@ export interface Query {
   query: string;
 }
 export interface EmbeddableCustomization {
-  [key: string]: object | string;
-}
-
-export interface ContainerState {
-  // 'view' or 'edit'. Should probably be an enum but I'm undecided where to define it, here or in dashboard code.
-  viewMode: string;
-
-  timeRange: TimeRange;
-
-  filters: Filters;
-
-  query: Query;
-
-  // The shape will be up to the embeddable type.
-  embeddableCustomization?: EmbeddableCustomization;
-
-  /**
-   * Whether or not panel titles are hidden. It is not the embeddable's responsibility to hide the title (the container
-   * handles that). This information is currently only used to determine the title for reporting (data-sharing-title
-   * attribute). If we move that out of the embeddables and push it to the container (as we probably should), then
-   * we shouldn't need to expose this information.
-   */
-  hidePanelTitles: boolean;
-
-  /**
-   * Is the current panel in expanded mode
-   */
-  isPanelExpanded: boolean;
-
-  /**
-   * A way to override the underlying embeddable title and supply a title at the panel level.
-   */
-  customTitle?: string;
+  overriddenTimeRange?: TimeRange;
 }
 
 export interface EmbeddableState {
