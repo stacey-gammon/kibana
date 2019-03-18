@@ -37,6 +37,8 @@ import { translations } from './plugins/translations';
 import { upgradeAssistant } from './plugins/upgrade_assistant';
 import { uptime } from './plugins/uptime';
 import { ossTelemetry } from './plugins/oss_telemetry';
+import { advancedEmbeddableActions } from './plugins/advanced_embeddable_actions';
+import { embeddableActionEditor } from './plugins/embeddable_action_editor';
 
 module.exports = function (kibana) {
   return [
@@ -73,5 +75,7 @@ module.exports = function (kibana) {
     upgradeAssistant(kibana),
     uptime(kibana),
     ossTelemetry(kibana),
+    advancedEmbeddableActions(kibana),
+    embeddableActionEditor(kibana),
   ];
 };

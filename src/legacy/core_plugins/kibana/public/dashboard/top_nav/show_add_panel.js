@@ -24,7 +24,7 @@ import ReactDOM from 'react-dom';
 
 let isOpen = false;
 
-export function showAddPanel(addNewPanel, addNewVis, embeddableFactories) {
+export function showAddPanel(addNewPanel, addNewVis, embeddableFactories, dashboardContainer) {
   if (isOpen) {
     return;
   }
@@ -48,6 +48,7 @@ export function showAddPanel(addNewPanel, addNewVis, embeddableFactories) {
       <DashboardAddPanel
         onClose={onClose}
         addNewPanel={addNewPanel}
+        container={dashboardContainer}
         addNewVis={addNewVisWithCleanup}
         embeddableFactories={embeddableFactories}
       />

@@ -32,7 +32,7 @@ import {
   EuiFlyoutFooter,
   EuiFlyoutBody,
   EuiButton,
-  EuiTitle,
+  EuiTitle, EuiSelect
 } from '@elastic/eui';
 
 export class DashboardAddPanel extends React.Component {
@@ -58,6 +58,18 @@ export class DashboardAddPanel extends React.Component {
       'data-test-subj': 'addObjectToDashboardSuccess',
     });
   };
+
+  createNewEmbeddable(type) {
+    const factory = this.props.embeddableFactories.find(factory => factory.type === type);
+    const embeddable = factory.create();
+    this.props.container.addNewEmbeddable(embeddable);
+  }
+
+  onAddPanel = (data) => {
+    const factory = this.props.embeddableFactories.find(factory => factory.type === data.type);
+    const embeddable = factory.create(data);
+    this.props.container.addNewEmbeddable(embeddable);
+  }
 
   render() {
     return (
@@ -90,6 +102,13 @@ export class DashboardAddPanel extends React.Component {
         <EuiFlyoutFooter>
           <EuiFlexGroup justifyContent="flexEnd">
             <EuiFlexItem grow={false}>
+              <EuiSelect
+                options={[
+                  { text: 'Create New...', value: '1' },
+                  ...this.props.embeddableFactories.map(factory => {text: `Create new ${factory.displayName}`; value: factory.type; })]}
+                value="1"
+                onChange={e => this.createNewEmbeddable(e.target.value)}
+              />
               <EuiButton fill onClick={this.props.addNewVis} data-test-subj="addNewSavedObjectLink">
                 <FormattedMessage
                   id="kbn.dashboard.topNav.addPanel.createNewVisualizationButtonLabel"
