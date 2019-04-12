@@ -20,22 +20,49 @@
 import '../doc_table';
 import { uiCapabilities } from 'ui/capabilities';
 import { i18n } from '@kbn/i18n';
-import { EmbeddableFactory } from 'ui/embeddable';
 import {
-  EmbeddableInstanceConfiguration,
-  OnEmbeddableStateChanged,
-} from 'ui/embeddable/embeddable_factory';
+  embeddableFactories,
+  EmbeddableFactory,
+  ErrorEmbeddable,
+  triggerRegistry,
+} from 'plugins/embeddable_api/index';
+import chrome from 'ui/chrome';
 import { SavedSearchLoader } from '../types';
-import { SearchEmbeddable } from './search_embeddable';
+import { SearchEmbeddable, SearchInput, SearchOutput } from './search_embeddable';
 
-export class SearchEmbeddableFactory extends EmbeddableFactory {
-  constructor(
-    private $compile: ng.ICompileService,
-    private $rootScope: ng.IRootScopeService,
-    private searchLoader: SavedSearchLoader
-  ) {
+export const SEARCH_EMBEDDABLE_TYPE = 'search';
+
+export const SEARCH_OUTPUT_SPEC = {
+  ['title']: {
+    displayName: 'Title',
+    description: 'The title of the element',
+    accessPath: 'element.title',
+    id: 'title',
+  },
+  ['timeRange']: {
+    displayName: 'Time range',
+    description: 'The time range. Object type that has from and to nested properties.',
+    accessPath: 'element.timeRange',
+    id: 'timeRange',
+  },
+  ['filters']: {
+    displayName: 'Filters',
+    description: 'The filters applied to the current view',
+    accessPath: 'element.filters',
+    id: 'filters',
+  },
+  ['query']: {
+    displayName: 'Query',
+    description: 'The query applied to the current view',
+    accessPath: 'element.query',
+    id: 'query',
+  },
+};
+
+export class SearchEmbeddableFactory extends EmbeddableFactory<SearchInput, SearchOutput> {
+  constructor() {
     super({
-      name: 'search',
+      name: SEARCH_EMBEDDABLE_TYPE,
       savedObjectMetaData: {
         name: i18n.translate('kbn.discover.savedSearch.savedObjectName', {
           defaultMessage: 'Saved search',
@@ -46,35 +73,68 @@ export class SearchEmbeddableFactory extends EmbeddableFactory {
     });
   }
 
-  public getEditPath(panelId: string) {
-    return this.searchLoader.urlFor(panelId);
+  public getOutputSpec() {
+    return SEARCH_OUTPUT_SPEC;
   }
 
   /**
    *
-   * @param {Object} panelMetadata. Currently just passing in panelState but it's more than we need, so we should
+   * @param panelMetadata. Currently just passing in panelState but it's more than we need, so we should
    * decouple this to only include data given to us from the embeddable when it's added to the dashboard. Generally
    * will be just the object id, but could be anything depending on the plugin.
    * @param onEmbeddableStateChanged
-   * @return {Promise.<Embeddable>}
+   * @return
    */
-  public create(
-    { id }: EmbeddableInstanceConfiguration,
-    onEmbeddableStateChanged: OnEmbeddableStateChanged
-  ) {
-    const editUrl = this.getEditPath(id);
-    const editable = uiCapabilities.discover.save as boolean;
-
-    // can't change this to be async / awayt, because an Anglular promise is expected to be returned.
-    return this.searchLoader.get(id).then(savedObject => {
-      return new SearchEmbeddable({
-        onEmbeddableStateChanged,
-        savedSearch: savedObject,
-        editUrl,
-        editable,
-        $rootScope: this.$rootScope,
-        $compile: this.$compile,
+  public async create(initialInput: SearchInput) {
+    if (!initialInput.savedObjectId) {
+      return new ErrorEmbeddable({
+        ...initialInput,
+        errorMessage: 'Need a saved object id to load search embeddable',
       });
-    });
+    }
+
+    const $injector = await chrome.dangerouslyGetActiveInjector();
+
+    const $compile = $injector.get<ng.ICompileService>('$compile');
+    const $rootScope = $injector.get<ng.IRootScopeService>('$rootScope');
+    const courier = $injector.get<unknown>('courier');
+    const searchLoader = $injector.get<SavedSearchLoader>('savedSearches');
+
+    const editUrl = chrome.addBasePath(
+      `/app/kibana${searchLoader.urlFor(initialInput.savedObjectId)}`
+    );
+    // can't change this to be async / awayt, because an Anglular promise is expected to be returned.
+    return searchLoader
+      .get(initialInput.savedObjectId)
+      .then(savedObject => {
+        return new SearchEmbeddable(
+          {
+            courier,
+            editable: uiCapabilities.discover.save as boolean,
+            savedSearch: savedObject,
+            editUrl,
+            $rootScope,
+            $compile,
+            factory: this,
+          },
+          initialInput
+        );
+      })
+      .catch((e: any) => {
+        return new ErrorEmbeddable({
+          ...initialInput,
+          errorMessage: 'Hit a failure: ' + JSON.stringify(e),
+        });
+      });
   }
 }
+
+embeddableFactories.registerFactory(new SearchEmbeddableFactory());
+
+export const SEARCH_ROW_CLICK_TRIGGER = 'SEARCH_ROW_CLICK_TRIGGER';
+
+triggerRegistry.registerTrigger({
+  id: SEARCH_ROW_CLICK_TRIGGER,
+  embeddableType: SEARCH_EMBEDDABLE_TYPE,
+  title: 'On row click',
+});
