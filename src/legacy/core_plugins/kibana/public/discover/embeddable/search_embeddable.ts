@@ -19,20 +19,33 @@
 
 import angular from 'angular';
 import _ from 'lodash';
-import { SearchSource } from 'ui/courier';
 import {
-  ContainerState,
+  APPLY_FILTER_TRIGGER,
   Embeddable,
-  EmbeddableState,
-  OnEmbeddableStateChanged,
+  EmbeddableInput,
+  EmbeddableOutput,
+  executeTriggerActions,
+  Filters,
+  OutputSpec,
+  Query,
+  CONTEXT_MENU_TRIGGER,
   TimeRange,
-} from 'ui/embeddable';
-import { Filters, Query } from 'ui/embeddable/types';
+  Trigger,
+} from 'plugins/embeddable_api/index';
+import { SearchSource } from 'ui/courier';
+import { generateFilters } from 'ui/filter_manager/generate_filter_shape';
+import { StaticIndexPattern } from 'ui/index_patterns';
 import { RequestAdapter } from 'ui/inspector/adapters';
 import { Adapters } from 'ui/inspector/types';
 import { getTime } from 'ui/timefilter/get_time';
 import * as columnActions from '../doc_table/actions/columns';
 import { SavedSearch } from '../types';
+import {
+  SEARCH_EMBEDDABLE_TYPE,
+  SEARCH_OUTPUT_SPEC,
+  SearchEmbeddableFactory,
+} from './search_embeddable_factory';
+import { SEARCH_ROW_CLICK_TRIGGER } from './search_embeddable_factory';
 import searchTemplate from './search_template.html';
 
 interface SearchScope extends ng.IScope {
@@ -46,82 +59,87 @@ interface SearchScope extends ng.IScope {
   removeColumn?: (column: string) => void;
   addColumn?: (column: string) => void;
   moveColumn?: (column: string, index: number) => void;
-  filter?: (field: string, value: string, operator: string) => void;
-}
-
-interface SearchEmbeddableCustomization {
-  sort?: string[];
-  columns?: string[];
+  filter?: (field: { name: string; scripted: boolean }, value: string[], operator: string) => void;
 }
 
 interface SearchEmbeddableConfig {
-  onEmbeddableStateChanged: OnEmbeddableStateChanged;
   savedSearch: SavedSearch;
   editUrl: string;
   editable: boolean;
   $rootScope: ng.IRootScopeService;
   $compile: ng.ICompileService;
+  factory: SearchEmbeddableFactory;
+  courier: any;
 }
 
-export class SearchEmbeddable extends Embeddable {
-  private readonly onEmbeddableStateChanged: OnEmbeddableStateChanged;
+interface SearchOverrides {
+  columns?: string[];
+  sort?: string[];
+  title?: string;
+}
+
+export interface SearchInput extends EmbeddableInput {
+  timeRange?: TimeRange;
+  query?: Query;
+  filters?: Filters;
+  hidePanelTitles?: boolean;
+  customization: SearchOverrides;
+  savedObjectId: string;
+}
+
+export interface SearchOutput extends EmbeddableOutput {
+  title: string;
+  editUrl: string;
+  indexPatterns?: StaticIndexPattern[];
+}
+
+export class SearchEmbeddable extends Embeddable<SearchInput, SearchOutput> {
   private readonly savedSearch: SavedSearch;
   private $rootScope: ng.IRootScopeService;
   private $compile: ng.ICompileService;
-  private customization: SearchEmbeddableCustomization;
   private inspectorAdaptors: Adapters;
   private searchScope?: SearchScope;
   private panelTitle: string = '';
   private filtersSearchSource: SearchSource;
-  private timeRange?: TimeRange;
-  private filters?: Filters;
-  private query?: Query;
   private searchInstance?: JQLite;
+  private courier: any;
+  private unsubscribe?: () => void;
 
-  constructor({
-    onEmbeddableStateChanged,
-    savedSearch,
-    editable,
-    editUrl,
-    $rootScope,
-    $compile,
-  }: SearchEmbeddableConfig) {
-    super({
-      title: savedSearch.title,
+  constructor(
+    { savedSearch, editUrl, $rootScope, $compile, courier }: SearchEmbeddableConfig,
+    initialInput: SearchInput
+  ) {
+    super(SEARCH_EMBEDDABLE_TYPE, initialInput, {
       editUrl,
-      editable,
+      title: savedSearch.title,
       indexPatterns: _.compact([savedSearch.searchSource.getField('index')]),
     });
-    this.onEmbeddableStateChanged = onEmbeddableStateChanged;
+
+    this.courier = courier;
     this.savedSearch = savedSearch;
     this.$rootScope = $rootScope;
     this.$compile = $compile;
-    this.customization = {};
     this.inspectorAdaptors = {
       requests: new RequestAdapter(),
     };
+
+    this.unsubscribe = this.subscribeToInputChanges(() => {
+      this.panelTitle = '';
+      if (!this.input.hidePanelTitles) {
+        this.panelTitle =
+          this.input.customization && this.input.customization.title !== undefined
+            ? this.input.customization.title
+            : this.savedSearch.title;
+      }
+
+      if (this.searchScope) {
+        this.pushContainerStateParamsToScope(this.searchScope);
+      }
+    });
   }
 
   public getInspectorAdapters() {
     return this.inspectorAdaptors;
-  }
-
-  public onContainerStateChanged(containerState: ContainerState) {
-    this.customization = containerState.embeddableCustomization || {};
-    this.filters = containerState.filters;
-    this.query = containerState.query;
-    this.timeRange = containerState.timeRange;
-    this.panelTitle = '';
-    if (!containerState.hidePanelTitles) {
-      this.panelTitle =
-        containerState.customTitle !== undefined
-          ? containerState.customTitle
-          : this.savedSearch.title;
-    }
-
-    if (this.searchScope) {
-      this.pushContainerStateParamsToScope(this.searchScope);
-    }
   }
 
   /**
@@ -129,8 +147,7 @@ export class SearchEmbeddable extends Embeddable {
    * @param {Element} domNode
    * @param {ContainerState} containerState
    */
-  public render(domNode: HTMLElement, containerState: ContainerState) {
-    this.onContainerStateChanged(containerState);
+  public render(domNode: HTMLElement) {
     this.initializeSearchScope();
     if (!this.searchScope) {
       throw new Error('Search scope not defined');
@@ -139,6 +156,8 @@ export class SearchEmbeddable extends Embeddable {
     this.searchInstance = this.$compile(searchTemplate)(this.searchScope);
     const rootNode = angular.element(domNode);
     rootNode.append(this.searchInstance);
+
+    this.pushContainerStateParamsToScope(this.searchScope);
   }
 
   public destroy() {
@@ -152,6 +171,75 @@ export class SearchEmbeddable extends Embeddable {
     }
   }
 
+  public supportsTrigger(trigger: Trigger) {
+    return !![
+      CONTEXT_MENU_TRIGGER,
+      APPLY_FILTER_TRIGGER,
+      SEARCH_ROW_CLICK_TRIGGER,
+    ].find(id => id === trigger.id);
+  }
+
+  public getOutputSpec(trigger?: Trigger) {
+    if (!this.searchScope || !this.searchScope.columns) {
+      return {};
+    }
+
+    let outputSpec: OutputSpec = {};
+
+    if (trigger && trigger.id === SEARCH_ROW_CLICK_TRIGGER) {
+      this.searchScope.columns.forEach(column => {
+        const columnId = column.replace(/\s/g, '');
+        outputSpec[columnId] = {
+          displayName: 'Clicked row cell',
+          description: 'The value of the cell that was clicked on',
+          accessPath: `triggerContext.${columnId.replace(/\s/g, '')}`,
+          id: columnId,
+        };
+      });
+    } else if (trigger && trigger.id === APPLY_FILTER_TRIGGER) {
+      outputSpec = {
+        ['fieldName']: {
+          displayName: 'Clicked column name',
+          description: 'A filter that was clicked on',
+          accessPath: 'triggerContext.fieldName',
+          id: 'fieldName',
+        },
+        ['fieldValue']: {
+          displayName: 'Clicked cell value',
+          description: 'The value of the cell that was clicked on',
+          accessPath: 'triggerContext.fieldValue',
+          id: 'fieldValue',
+        },
+      };
+    }
+
+    outputSpec = {
+      ...outputSpec,
+      ...SEARCH_OUTPUT_SPEC,
+    };
+
+    Object.values(outputSpec).forEach(propertySpec => {
+      if (!this.output.hasOwnProperty(propertySpec.accessPath.substr('element.'.length))) {
+        return;
+      }
+      const path = propertySpec.accessPath.substr('element.'.length);
+
+      // @ts-ignore Take this stuff out of here for commit 1
+      const value = this.output[path];
+      if (!value) {
+        throw new Error(`No data at ${path}`);
+      }
+
+      if (typeof value === 'object') {
+        outputSpec[propertySpec.id].value = JSON.stringify(value);
+      } else {
+        outputSpec[propertySpec.id].value = value;
+      }
+    });
+
+    return outputSpec;
+  }
+
   private initializeSearchScope() {
     const searchScope: SearchScope = this.$rootScope.$new();
 
@@ -161,10 +249,10 @@ export class SearchEmbeddable extends Embeddable {
 
     const timeRangeSearchSource = searchScope.searchSource.create();
     timeRangeSearchSource.setField('filter', () => {
-      if (!this.searchScope || !this.timeRange) {
+      if (!this.searchScope || !this.input.timeRange) {
         return;
       }
-      return getTime(this.searchScope.searchSource.getField('index'), this.timeRange);
+      return getTime(this.searchScope.searchSource.getField('index'), this.input.timeRange);
     });
 
     this.filtersSearchSource = searchScope.searchSource.create();
@@ -175,8 +263,8 @@ export class SearchEmbeddable extends Embeddable {
     this.pushContainerStateParamsToScope(searchScope);
 
     searchScope.setSortOrder = (columnName, direction) => {
-      searchScope.sort = this.customization.sort = [columnName, direction];
-      this.emitEmbeddableStateChange(this.getEmbeddableState());
+      searchScope.sort = [columnName, direction];
+      this.updateInput({ customization: { sort: searchScope.sort, ...this.input.customization } });
     };
 
     searchScope.addColumn = (columnName: string) => {
@@ -185,8 +273,10 @@ export class SearchEmbeddable extends Embeddable {
       }
       this.savedSearch.searchSource.getField('index').popularizeField(columnName, 1);
       columnActions.addColumn(searchScope.columns, columnName);
-      searchScope.columns = this.customization.columns = searchScope.columns;
-      this.emitEmbeddableStateChange(this.getEmbeddableState());
+      searchScope.columns = searchScope.columns;
+      this.updateInput({
+        customization: { columns: searchScope.columns, ...this.input.customization },
+      });
     };
 
     searchScope.removeColumn = (columnName: string) => {
@@ -195,8 +285,9 @@ export class SearchEmbeddable extends Embeddable {
       }
       this.savedSearch.searchSource.getField('index').popularizeField(columnName, 1);
       columnActions.removeColumn(searchScope.columns, columnName);
-      this.customization.columns = searchScope.columns;
-      this.emitEmbeddableStateChange(this.getEmbeddableState());
+      this.updateInput({
+        customization: { columns: searchScope.columns, ...this.input.customization },
+      });
     };
 
     searchScope.moveColumn = (columnName, newIndex: number) => {
@@ -204,46 +295,62 @@ export class SearchEmbeddable extends Embeddable {
         return;
       }
       columnActions.moveColumn(searchScope.columns, columnName, newIndex);
-      this.customization.columns = searchScope.columns;
-      this.emitEmbeddableStateChange(this.getEmbeddableState());
+      this.updateInput({
+        customization: { columns: searchScope.columns, ...this.input.customization },
+      });
     };
 
-    searchScope.filter = (field, value, operator) => {
+    searchScope.filter = async (field, value, operator) => {
       const index = this.savedSearch.searchSource.getField('index').id;
       const stagedFilter = {
         field,
         value,
-        operator,
+        operation: operator,
         index,
       };
-      this.emitEmbeddableStateChange({
-        ...this.getEmbeddableState(),
-        stagedFilter,
+
+      let filters = generateFilters(stagedFilter);
+      filters = filters.map(filter => ({
+        ...filter,
+        $state: { store: 'appState' },
+      }));
+
+      await executeTriggerActions(APPLY_FILTER_TRIGGER, {
+        embeddable: this,
+        container: this.container,
+        triggerContext: {
+          stagedFilter,
+          filters,
+        },
       });
     };
 
     this.searchScope = searchScope;
   }
 
-  private emitEmbeddableStateChange(embeddableState: EmbeddableState) {
-    this.onEmbeddableStateChanged(embeddableState);
-  }
-
-  private getEmbeddableState(): EmbeddableState {
-    return {
-      customization: this.customization,
-    };
-  }
-
   private pushContainerStateParamsToScope(searchScope: SearchScope) {
     // If there is column or sort data on the panel, that means the original columns or sort settings have
     // been overridden in a dashboard.
-
-    searchScope.columns = this.customization.columns || this.savedSearch.columns;
-    searchScope.sort = this.customization.sort || this.savedSearch.sort;
+    searchScope.columns = this.input.customization.columns || this.savedSearch.columns;
+    searchScope.sort = this.input.customization.sort || this.savedSearch.sort;
     searchScope.sharedItemTitle = this.panelTitle;
 
-    this.filtersSearchSource.setField('filter', this.filters);
-    this.filtersSearchSource.setField('query', this.query);
+    // Awful hack to get search sources to send out an initial query. Angular should be going away
+    // soon and we can get rid of this.
+    if (searchScope.searchSource) {
+      if (!searchScope.$$phase) {
+        searchScope.$apply(() => {
+          searchScope.searchSource.triggerFetch = searchScope.searchSource.triggerFetch
+            ? searchScope.searchSource.triggerFetch + 1
+            : 1;
+        });
+      }
+    }
+
+    this.filtersSearchSource.setField('filter', this.input.filters);
+    this.filtersSearchSource.setField('query', this.input.query);
+
+    // Sadly this is neccessary to tell the angular component to refetch the data.
+    this.courier.fetch();
   }
 }

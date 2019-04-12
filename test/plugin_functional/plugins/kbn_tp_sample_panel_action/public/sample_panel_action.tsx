@@ -24,7 +24,7 @@ import {
   ContextMenuAction,
   ContextMenuActionsRegistryProvider,
   PanelActionAPI,
-} from 'ui/embeddable';
+} from 'plugins/embeddable_api/index';
 
 class SamplePanelAction extends ContextMenuAction {
   constructor() {

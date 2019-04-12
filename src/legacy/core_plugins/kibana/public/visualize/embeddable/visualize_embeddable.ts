@@ -18,30 +18,58 @@
  */
 
 import _ from 'lodash';
-import { ContainerState, Embeddable } from 'ui/embeddable';
-import { OnEmbeddableStateChanged } from 'ui/embeddable/embeddable_factory';
-import { Filters, Query, TimeRange } from 'ui/embeddable/types';
+import {
+  APPLY_FILTER_TRIGGER,
+  Embeddable,
+  EmbeddableInput,
+  EmbeddableOutput,
+  Filters,
+  Query,
+  TimeRange,
+  Trigger,
+} from 'plugins/embeddable_api/index';
 import { StaticIndexPattern } from 'ui/index_patterns';
 import { PersistedState } from 'ui/persisted_state';
 import { VisualizeLoader } from 'ui/visualize/loader';
 import { EmbeddedVisualizeHandler } from 'ui/visualize/loader/embedded_visualize_handler';
 import {
+  Filter,
   VisSavedObject,
   VisualizeLoaderParams,
   VisualizeUpdateParams,
 } from 'ui/visualize/loader/types';
+import { VISUALIZE_EMBEDDABLE_TYPE } from './visualize_embeddable_factory';
 
 export interface VisualizeEmbeddableConfiguration {
-  onEmbeddableStateChanged: OnEmbeddableStateChanged;
   savedVisualization: VisSavedObject;
   indexPatterns?: StaticIndexPattern[];
-  editUrl?: string;
-  editable: boolean;
+  editUrl: string;
   loader: VisualizeLoader;
 }
 
-export class VisualizeEmbeddable extends Embeddable {
-  private onEmbeddableStateChanged: OnEmbeddableStateChanged;
+interface VisualizeOverrides {
+  vis?: {
+    colors?: { [key: string]: string };
+  };
+  title?: string;
+}
+
+export interface VisualizeInput extends EmbeddableInput {
+  timeRange?: TimeRange;
+  query?: Query;
+  filters?: Filters;
+  hidePanelTitles?: boolean;
+  customization: VisualizeOverrides;
+  savedObjectId: string;
+}
+
+export interface VisualizeOutput extends EmbeddableOutput {
+  title: string;
+  editUrl: string;
+  indexPatterns?: StaticIndexPattern[];
+}
+
+export class VisualizeEmbeddable extends Embeddable<VisualizeInput, VisualizeOutput> {
   private savedVisualization: VisSavedObject;
   private loader: VisualizeLoader;
   private uiState: PersistedState;
@@ -52,21 +80,16 @@ export class VisualizeEmbeddable extends Embeddable {
   private query?: Query;
   private filters?: Filters;
 
-  constructor({
-    onEmbeddableStateChanged,
-    savedVisualization,
-    indexPatterns,
-    editUrl,
-    editable,
-    loader,
-  }: VisualizeEmbeddableConfiguration) {
-    super({
+  constructor(
+    { savedVisualization, indexPatterns, editUrl, loader }: VisualizeEmbeddableConfiguration,
+    initialInput: VisualizeInput
+  ) {
+    super(VISUALIZE_EMBEDDABLE_TYPE, initialInput, {
       title: savedVisualization.title,
       editUrl,
-      editable,
       indexPatterns,
+      customization: {},
     });
-    this.onEmbeddableStateChanged = onEmbeddableStateChanged;
     this.savedVisualization = savedVisualization;
     this.loader = loader;
 
@@ -76,6 +99,11 @@ export class VisualizeEmbeddable extends Embeddable {
     this.uiState = new PersistedState(parsedUiState);
 
     this.uiState.on('change', this.uiStateChangeHandler);
+
+    this.subscribeToInputChanges(() => {
+      this.reload();
+      this.handleInputChanges(this.input);
+    });
   }
 
   public getInspectorAdapters() {
@@ -85,57 +113,56 @@ export class VisualizeEmbeddable extends Embeddable {
     return this.handler.inspectorAdapters;
   }
 
-  public getEmbeddableState() {
-    return {
-      customization: this.customization,
-    };
+  public supportsTrigger(trigger: Trigger) {
+    return trigger.id !== APPLY_FILTER_TRIGGER;
   }
 
   /**
-   * Transfers all changes in the containerState.embeddableCustomization into
+   * Transfers all changes in the containerState.customization into
    * the uiState of this visualization.
    */
-  public transferCustomizationsToUiState(containerState: ContainerState) {
+  public transferCustomizationsToUiState(containerState: VisualizeInput) {
     // Check for changes that need to be forwarded to the uiState
     // Since the vis has an own listener on the uiState we don't need to
     // pass anything from here to the handler.update method
-    const customization = containerState.embeddableCustomization;
+    const customization = containerState.customization;
     if (customization && !_.isEqual(this.customization, customization)) {
       // Turn this off or the uiStateChangeHandler will fire for every modification.
       this.uiState.off('change', this.uiStateChangeHandler);
       this.uiState.clearAllKeys();
-      Object.getOwnPropertyNames(customization).forEach(key => {
-        this.uiState.set(key, customization[key]);
-      });
-      this.customization = customization;
+      this.uiState.set('vis', customization.vis);
+      // Object.getOwnPropertyNames(customization).forEach(key => {
+      //   this.uiState.set(key, customization[key]);
+      // });
+      this.output.customization = customization;
       this.uiState.on('change', this.uiStateChangeHandler);
     }
   }
 
-  public onContainerStateChanged(containerState: ContainerState) {
-    this.transferCustomizationsToUiState(containerState);
+  public handleInputChanges(input: VisualizeInput) {
+    this.transferCustomizationsToUiState(input);
 
     const updatedParams: VisualizeUpdateParams = {};
 
     // Check if timerange has changed
-    if (containerState.timeRange !== this.timeRange) {
-      updatedParams.timeRange = containerState.timeRange;
-      this.timeRange = containerState.timeRange;
+    if (input.timeRange !== this.timeRange) {
+      updatedParams.timeRange = input.timeRange;
+      this.timeRange = input.timeRange;
     }
 
     // Check if filters has changed
-    if (containerState.filters !== this.filters) {
-      updatedParams.filters = containerState.filters;
-      this.filters = containerState.filters;
+    if (input.filters !== this.filters) {
+      updatedParams.filters = input.filters;
+      this.filters = input.filters;
     }
 
     // Check if query has changed
-    if (containerState.query !== this.query) {
-      updatedParams.query = containerState.query;
-      this.query = containerState.query;
+    if (input.query !== this.query) {
+      updatedParams.query = input.query;
+      this.query = input.query;
     }
 
-    const derivedPanelTitle = this.getPanelTitle(containerState);
+    const derivedPanelTitle = this.getPanelTitle();
     if (this.panelTitle !== derivedPanelTitle) {
       updatedParams.dataAttrs = {
         title: derivedPanelTitle,
@@ -153,13 +180,13 @@ export class VisualizeEmbeddable extends Embeddable {
    * @param {Element} domNode
    * @param {ContainerState} containerState
    */
-  public render(domNode: HTMLElement, containerState: ContainerState) {
-    this.panelTitle = this.getPanelTitle(containerState);
-    this.timeRange = containerState.timeRange;
-    this.query = containerState.query;
-    this.filters = containerState.filters;
+  public render(domNode: HTMLElement) {
+    this.panelTitle = this.getPanelTitle();
+    this.timeRange = this.input.timeRange;
+    this.query = this.input.query;
+    this.filters = this.input.filters;
 
-    this.transferCustomizationsToUiState(containerState);
+    this.transferCustomizationsToUiState(this.input);
 
     const dataAttrs: { [key: string]: string } = {
       'shared-item': '',
@@ -173,9 +200,9 @@ export class VisualizeEmbeddable extends Embeddable {
       uiState: this.uiState,
       // Append visualization to container instead of replacing its content
       append: true,
-      timeRange: containerState.timeRange,
-      query: containerState.query,
-      filters: containerState.filters,
+      timeRange: this.input.timeRange,
+      query: this.input.query,
+      filters: this.input.filters,
       cssClass: `panel-content panel-content--fullWidth`,
       dataAttrs,
     };
@@ -206,19 +233,23 @@ export class VisualizeEmbeddable extends Embeddable {
    * Retrieve the panel title for this panel from the container state.
    * This will either return the overwritten panel title or the visualization title.
    */
-  private getPanelTitle(containerState: ContainerState) {
+  private getPanelTitle() {
     let derivedPanelTitle = '';
-    if (!containerState.hidePanelTitles) {
+    if (!this.input.hidePanelTitles) {
       derivedPanelTitle =
-        containerState.customTitle !== undefined
-          ? containerState.customTitle
+        this.input.customization && this.input.customization.title !== undefined
+          ? this.input.customization.title
           : this.savedVisualization.title;
     }
     return derivedPanelTitle;
   }
 
   private uiStateChangeHandler = () => {
-    this.customization = this.uiState.toJSON();
-    this.onEmbeddableStateChanged(this.getEmbeddableState());
+    this.updateInput({
+      customization: {
+        ...this.output.customization,
+        ...this.uiState.toJSON(),
+      },
+    });
   };
 }
