@@ -153,7 +153,6 @@ export class MapEmbeddable extends Embeddable {
     const center = getMapCenter(this._store.getState());
     const zoom = getMapZoom(this._store.getState());
 
-
     const customization = this.input.customization || {};
     if (!customization.mapCenter
       || customization.mapCenter.lat !== center.lat
@@ -168,15 +167,16 @@ export class MapEmbeddable extends Embeddable {
     }
 
     const isLayerTOCOpen = getIsLayerTOCOpen(this._store.getState());
-    if (!this._embeddableConfig.isLayerTOCOpen
-      || this._embeddableConfig.isLayerTOCOpen !== isLayerTOCOpen) {
+
+    if (!customization.isLayerTOCOpen
+      || customization.isLayerTOCOpen !== isLayerTOCOpen) {
       embeddableConfigChanged = true;
-      this._embeddableConfig.isLayerTOCOpen = isLayerTOCOpen;
+      customization.isLayerTOCOpen = isLayerTOCOpen;
     }
 
     if (embeddableConfigChanged) {
       this.updateInput({
-        customization: this._embeddableConfig
+        customization
       });
     }
   }
