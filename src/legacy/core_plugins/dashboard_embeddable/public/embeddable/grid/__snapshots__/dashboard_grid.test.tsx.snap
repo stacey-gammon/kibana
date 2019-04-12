@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`renders DashboardGrid 1`] = `""`;
+
+exports[`renders DashboardGrid with no visualizations 1`] = `""`;
