@@ -43,6 +43,7 @@ function renderBadges(badges: Action[], embeddable: IEmbeddable) {
   return badges.map(badge => (
     <EuiBadge
       key={badge.id}
+      className="embPanel__headerBadge"
       iconType={badge.getIconType({ embeddable })}
       onClick={() => badge.execute({ embeddable })}
       onClickAriaLabel={badge.getDisplayName({ embeddable })}
@@ -100,7 +101,7 @@ function PanelHeaderUi({
           }
         )}
       >
-        {showTitle ? `${title} ` : ''}
+        {showTitle && <span className="embPanel__titleInner">{title}</span>}
         {renderBadges(badges, embeddable)}
       </div>
 

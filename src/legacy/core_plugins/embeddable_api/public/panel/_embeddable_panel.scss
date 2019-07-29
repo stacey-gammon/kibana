@@ -38,13 +38,22 @@
 }
 
 .embPanel__title {
-  @include euiTextTruncate;
   @include euiTitle('xxxs');
+  overflow: hidden;
   line-height: 1.5;
   flex-grow: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
 
   &:not(:empty) {
-    padding: ($euiSizeXS * 1.5) $euiSizeS 0;
+    line-height: $euiSizeL;
+    padding-left: $euiSizeS;
+  }
+
+  .embPanel__titleInner {
+    @include euiTextTruncate;
+    padding-right: $euiSizeS;
   }
 }
 
