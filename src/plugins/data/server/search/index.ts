@@ -17,5 +17,4 @@
  * under the License.
  */
 
-export * from './expressions';
-export * from './types';
+export { registerSearchRoute } from './routes';

@@ -17,4 +17,24 @@
  * under the License.
  */
 
+import { SearchParams } from 'elasticsearch';
+
 export * from './timefilter/types';
+
+export interface SearchArguments {
+  // The Elasticsearch search parameters
+  searchParams: SearchParams;
+
+  // An optional signal to abort the request
+  signal?: AbortSignal;
+
+  // Additional search options to customize the behavior of the request
+  options?: SearchOptions;
+}
+
+export interface SearchOptions {
+  [propName: string]: any;
+
+  // If courier:setRequestPreference is set to "sessionId", this will be used as the preference
+  sessionId?: string;
+}

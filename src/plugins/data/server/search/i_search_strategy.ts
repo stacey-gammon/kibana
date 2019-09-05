@@ -17,5 +17,19 @@
  * under the License.
  */
 
-export * from './expressions';
-export * from './types';
+import { SearchParams, SearchResponse } from 'elasticsearch';
+import { Observable } from 'rxjs';
+import { KibanaRequest } from 'kibana/server';
+import { SearchArguments, SearchOptions } from '../../common';
+
+export interface ISearchStrategy {
+  search: (
+    request: KibanaRequest,
+    searchArguments: SearchArguments
+  ) => Observable<SearchResponse<any>>;
+  getSearchParams: (
+    request: KibanaRequest,
+    searchParams: SearchParams,
+    options: SearchOptions
+  ) => Promise<SearchParams>;
+}

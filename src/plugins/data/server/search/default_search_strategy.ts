@@ -17,5 +17,21 @@
  * under the License.
  */
 
-export * from './expressions';
-export * from './types';
+import { from } from 'rxjs';
+import { KibanaRequest, APICaller } from 'kibana/server';
+import { SearchArguments } from '../../common';
+import { getSearchParams } from './get_search_params';
+import { ISearchStrategy } from './i_search_strategy';
+
+export function defaultSearchStrategyProvider(caller: APICaller): ISearchStrategy {
+  return {
+    search: (request: KibanaRequest, { searchParams, signal, options = {} }: SearchArguments) => {
+      const searchParamsPromise = getSearchParams(request, searchParams, options);
+      const responsePromise = searchParamsPromise.then(params =>
+        caller('search', params, { signal })
+      );
+      return from(responsePromise);
+    },
+    getSearchParams,
+  };
+}
