@@ -1,0 +1,10 @@
+{
+  "id": "hello_world_container",
+  "version": "0.0.1",
+  "kibanaVersion": "kibana",
+  "configPath": ["hello_world_container"],
+  "server": false,
+  "ui": true,
+  "requiredPlugins": ["embeddable"],
+  "optionalPlugins": []
+}

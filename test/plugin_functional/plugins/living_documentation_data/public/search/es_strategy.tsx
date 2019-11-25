@@ -29,9 +29,9 @@ import {
   ISearchGeneric,
   IEsSearchResponse,
   IEsSearchRequest,
-} from '../../../../../src/plugins/data/public';
+} from '../../../../../../src/plugins/data/public';
 import { DoSearch } from './do_search';
-import { GuideSection } from '../../living_documentation/public';
+import { GuideSection } from '../../../demo_explorer/public/guide_section';
 
 // @ts-ignore
 import serverPlugin from '!!raw-loader!./../../../../../../src/plugins/data/server/search/es_search/es_search_service';
@@ -58,7 +58,7 @@ interface State {
   error?: any;
 }
 
-export class EsSearchTest extends React.Component<Props, State> {
+export class EsSearchStrategy extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
 

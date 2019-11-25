@@ -1,0 +1,10 @@
+{
+  "id": "livingDocumentationData",
+  "version": "0.0.1",
+  "kibanaVersion": "kibana",
+  "configPath": ["living_documentation_data"],
+  "server": false,
+  "ui": true,
+  "requiredPlugins": ["demoExplorer", "demoSearch", "data"],
+  "optionalPlugins": []
+}

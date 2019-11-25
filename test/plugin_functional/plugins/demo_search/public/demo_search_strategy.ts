@@ -52,6 +52,8 @@ import { DEMO_SEARCH_STRATEGY, IDemoResponse } from '../common';
  *
  * @param context - context supplied by other plugins.
  * @param search - a search function to access other strategies that have already been registered.
+ * 
+ * @codeReferenceStart demoSearchClientSearchStrategy
  */
 export const demoClientSearchStrategyProvider: TSearchStrategyProvider<typeof DEMO_SEARCH_STRATEGY> = (
   context: ISearchContext,
@@ -66,3 +68,4 @@ export const demoClientSearchStrategyProvider: TSearchStrategyProvider<typeof DE
       ) as Observable<IDemoResponse>,
   };
 };
+/** @codeReferenceEnd demoSearchClientSearchStrategy */

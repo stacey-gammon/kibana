@@ -23,9 +23,13 @@ import { DEMO_SEARCH_STRATEGY } from '../common';
 import { demoClientSearchStrategyProvider } from './demo_search_strategy';
 import { IDemoRequest, IDemoResponse } from '../common';
 
+/**
+ * @codeReferenceStart demoSearchDeclarePluginDependencies
+ */
 interface DemoDataSearchSetupDependencies {
   data: DataPublicPluginSetup;
 }
+/** @codeReferenceEnd demoSearchDeclarePluginDependencies */
 
 /**
  * Add the typescript mappings for our search strategy to the request and
@@ -35,6 +39,8 @@ interface DemoDataSearchSetupDependencies {
  *
  * If the caller does not pass in the right `request` shape, typescript will
  * complain. The caller will also get a typed response.
+ *
+ * @codeReferenceStart demoSearchClientTypeCompletion
  */
 declare module '../../../../../src/plugins/data/public' {
   export interface IRequestTypesMap {
@@ -45,16 +51,22 @@ declare module '../../../../../src/plugins/data/public' {
     [DEMO_SEARCH_STRATEGY]: IDemoResponse;
   }
 }
+/** @codeReferenceEnd demoSearchClientTypeCompletion */
 
 export class DemoDataPlugin implements Plugin {
   constructor(private initializerContext: PluginInitializerContext) {}
-  public setup(core: CoreSetup, deps: DemoDataSearchSetupDependencies) {
-    deps.data.search.registerSearchStrategyProvider(
+  /**
+   * @codeReferenceStart demoSearchClientRegisterProvider
+   */
+  public setup(core: CoreSetup, plugins: DemoDataSearchSetupDependencies) {
+    plugins.data.search.registerSearchStrategyProvider(
       this.initializerContext.opaqueId,
       DEMO_SEARCH_STRATEGY,
       demoClientSearchStrategyProvider
     );
   }
+
+  /** @codeReferenceEnd demoSearchClientRegisterProvider */
 
   public start() {}
   public stop() {}

@@ -27,13 +27,24 @@ declare module 'kibana/public' {
 }
 export class SearchExplorerPlugin implements Plugin {
   public setup(core: CoreSetup) {
+    /**
+     * @codeReferenceStart demoSearchAppMountContext
+     */
     core.application.register({
       id: 'searchExplorer',
       title: 'Search Explorer',
       async mount(context, params) {
+        if (!context.search) {
+          throw new Error(
+            'Search context is not available. Be sure the data plugin is a required plugin.'
+          );
+        }
         const { renderApp } = await import('./application');
-        return renderApp(context, params);
+        return renderApp(context.search.search, params);
       },
+      /**
+       * @codeReferenceEnd demoSearchAppMountContext
+       */
     });
   }
 

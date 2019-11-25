@@ -143,6 +143,17 @@ function applyConfigOverrides(rawConfig, opts, extraCliOptions) {
   set('plugins.paths', _.compact([].concat(
     get('plugins.paths'),
     opts.pluginPath,
+    opts.runDemos ? [
+      /**
+       * Add more plugin paths in here if they are usable outside of the ci
+       * environment. Many of the plugins in here rely on data being injected from
+       * es_archiver, so I left them out.
+       */
+      fromRoot('test/plugin_functional/plugins/demo_search'),
+      fromRoot('test/plugin_functional/plugins/search_explorer'),
+      fromRoot('test/plugin_functional/plugins/demo_explorer'),
+      fromRoot('test/plugin_functional/plugins/living_documentation_data'),
+    ] : [],
 
     XPACK_INSTALLED && !opts.oss
       ? [XPACK_DIR]
@@ -200,7 +211,8 @@ export default function (program) {
 
   if (!IS_KIBANA_DISTRIBUTABLE) {
     command
-      .option('--oss', 'Start Kibana without X-Pack');
+      .option('--oss', 'Start Kibana without X-Pack')
+      .option('--run-demos', 'Adds plugin paths for all the Kibana demos and runs with no base path');
   }
 
   if (CAN_CLUSTER) {
@@ -237,7 +249,7 @@ export default function (program) {
           silent: !!opts.silent,
           watch: !!opts.watch,
           repl: !!opts.repl,
-          basePath: !!opts.basePath,
+          basePath: opts.runDemos ? false : !!opts.basePath,
           optimize: !!opts.optimize,
           oss: !!opts.oss
         },

@@ -25,13 +25,24 @@ import {
   EuiFlexGroup,
   EuiFieldText,
 } from '@elastic/eui';
-import { ISearchGeneric } from '../../../../../src/plugins/data/public';
+import { GuideSection } from '../../../demo_explorer/public';
+import { ISearchGeneric } from '../../../../../../src/plugins/data/public';
 import { DoSearch } from './do_search';
 
-import { DEMO_SEARCH_STRATEGY } from '../../demo_search/public';
+import { DEMO_SEARCH_STRATEGY } from '../../../demo_search/public';
 
-import { IDemoResponse, IDemoRequest } from '../../demo_search/common';
-import { GuideSection } from './guide_section';
+import { IDemoResponse, IDemoRequest } from '../../../demo_search/common';
+
+// @ts-ignore
+import doSearch from '!!raw-loader!./do_search.tsx';
+// @ts-ignore
+import demoStrategyServerProvider from '!!raw-loader!./../../../demo_search/server/demo_search_strategy';
+// @ts-ignore
+import demoStrategyPublicProvider from '!!raw-loader!./../../../demo_search/public/demo_search_strategy';
+// @ts-ignore
+import demoStrategyServerPlugin from '!!raw-loader!./../../../demo_search/server/plugin';
+// @ts-ignore
+import demoStrategyPublicPlugin from '!!raw-loader!./../../../demo_search/public/plugin';
 
 interface Props {
   search: ISearchGeneric;
@@ -87,15 +98,9 @@ export class DemoStrategy extends React.Component<Props, State> {
         <DoSearch
           request={request}
           strategy={DEMO_SEARCH_STRATEGY}
-          search={(signal: AbortSignal) => {
-            /**
-             * @codeReferenceStart demoSearchUsageExample
-             */
-            return this.props.search(request, { signal }, DEMO_SEARCH_STRATEGY);
-            /**
-             * @codeReferenceEnd demoSearchUsageExample
-             */
-          }}
+          search={(signal: AbortSignal) =>
+            this.props.search(request, { signal }, DEMO_SEARCH_STRATEGY)
+          }
         />
       </React.Fragment>
     );
@@ -104,7 +109,25 @@ export class DemoStrategy extends React.Component<Props, State> {
   render() {
     return (
       <EuiPageContentBody>
-        <GuideSection demo={this.renderDemo()} />
+        <GuideSection
+          codeSections={[
+            {
+              title: 'Public',
+              code: [
+                { description: 'plugin.ts', snippet: demoStrategyPublicPlugin },
+                { description: 'demo_search_strategy.ts', snippet: demoStrategyPublicProvider },
+              ],
+            },
+            {
+              title: 'Server',
+              code: [
+                { description: 'plugin.ts', snippet: demoStrategyServerPlugin },
+                { description: 'demo_search_strategy.ts', snippet: demoStrategyServerProvider },
+              ],
+            },
+          ]}
+          demo={this.renderDemo()}
+        />
       </EuiPageContentBody>
     );
   }

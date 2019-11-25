@@ -28,6 +28,7 @@ import {
   EuiSideNav,
 } from '@elastic/eui';
 
+import { ISearchGeneric } from 'src/plugins/data/public';
 import { AppMountContext, AppMountParameters } from '../../../../../src/core/public';
 import { EsSearchTest } from './es_strategy';
 import { Page } from './page';
@@ -44,11 +45,10 @@ interface PageDef {
 }
 
 type NavProps = RouteComponentProps & {
-  navigateToApp: AppMountContext['core']['application']['navigateToApp'];
   pages: PageDef[];
 };
 
-const Nav = withRouter(({ history, navigateToApp, pages }: NavProps) => {
+const Nav = withRouter(({ history, pages }: NavProps) => {
   const navItems = pages.map(page => ({
     id: page.id,
     name: page.title,
@@ -71,27 +71,27 @@ const Nav = withRouter(({ history, navigateToApp, pages }: NavProps) => {
 
 const buildPage = (page: PageDef) => <Page title={page.title}>{page.component}</Page>;
 
-const SearchApp = ({ basename, context }: { basename: string; context: AppMountContext }) => {
+const SearchApp = ({ basename, search }: { basename: string; search: ISearchGeneric }) => {
   const pages: PageDef[] = [
     {
       id: 'home',
       title: 'Home',
       component: <Home />,
     },
-    {
-      title: 'Search API',
-      id: 'searchAPI',
-      component: <SearchApiPage />,
-    },
-    {
-      title: 'ES search strategy',
-      id: 'esSearch',
-      component: <EsSearchTest search={context.search!.search} />,
-    },
+    // {
+    //   title: 'Search API',
+    //   id: 'searchAPI',
+    //   component: <SearchApiPage />,
+    // },
+    // {
+    //   title: 'ES search strategy',
+    //   id: 'esSearch',
+    //   component: <EsSearchTest search={context.search!.search} />,
+    // },
     {
       title: 'Demo search strategy',
       id: 'demoSearch',
-      component: <DemoStrategy search={context.search!.search} />,
+      component: <DemoStrategy search={search} />,
     },
   ];
 
@@ -103,7 +103,7 @@ const SearchApp = ({ basename, context }: { basename: string; context: AppMountC
     <Router basename={basename}>
       <EuiPage>
         <EuiPageSideBar>
-          <Nav navigateToApp={context.core.application.navigateToApp} pages={pages} />
+          <Nav pages={pages} />
         </EuiPageSideBar>
         <Route path="/" exact component={Home} />
         {routes}
@@ -112,11 +112,8 @@ const SearchApp = ({ basename, context }: { basename: string; context: AppMountC
   );
 };
 
-export const renderApp = (
-  context: AppMountContext,
-  { appBasePath, element }: AppMountParameters
-) => {
-  ReactDOM.render(<SearchApp basename={appBasePath} context={context} />, element);
+export const renderApp = (search: ISearchGeneric, { appBasePath, element }: AppMountParameters) => {
+  ReactDOM.render(<SearchApp basename={appBasePath} search={search} />, element);
 
   return () => ReactDOM.unmountComponentAtNode(element);
 };
