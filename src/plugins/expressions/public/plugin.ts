@@ -17,6 +17,7 @@
  * under the License.
  */
 
+import { IUiActionsSetup, IUiActionsStart } from '../../../../src/plugins/ui_actions/public';
 import { PluginInitializerContext, CoreSetup, CoreStart, Plugin } from '../../../core/public';
 import { ExpressionInterpretWithHandlers, ExpressionExecutor } from './types';
 import { FunctionsRegistry, RenderFunctionsRegistry, TypesRegistry } from './registries';
@@ -56,9 +57,14 @@ import { ExpressionLoader, loader } from './loader';
 import { ExpressionDataHandler, execute } from './execute';
 import { render, ExpressionRenderHandler } from './render';
 import { AnyExpressionFunction, AnyExpressionType } from '../common/types';
+import {
+  dataTableClickTrigger,
+  createApplyFilterFromDataTableClickAction,
+} from './actions/datatable_click_trigger';
 
 export interface ExpressionsSetupDeps {
   inspector: InspectorSetup;
+  uiActions: IUiActionsSetup;
 }
 
 export interface ExpressionsStartDeps {
@@ -96,8 +102,15 @@ export class ExpressionsPublicPlugin
 
   constructor(initializerContext: PluginInitializerContext) {}
 
-  public setup(core: CoreSetup, { inspector }: ExpressionsSetupDeps): ExpressionsSetup {
+  public setup(
+    core: CoreSetup<{ uiActions: IUiActionsStart }>,
+    { inspector, uiActions }: ExpressionsSetupDeps
+  ): ExpressionsSetup {
     const { functions, renderers, types } = this;
+
+    uiActions.registerAction(createApplyFilterFromDataTableClickAction(core));
+
+    uiActions.registerTrigger(dataTableClickTrigger);
 
     setRenderersRegistry(renderers);
 

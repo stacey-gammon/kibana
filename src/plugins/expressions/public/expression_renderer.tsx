@@ -58,6 +58,7 @@ export const ExpressionRendererImplementation = ({
   dataAttrs,
   padding,
   renderError,
+  extraHandlers,
   expression,
   ...expressionLoaderOptions
 }: ExpressionRendererProps) => {
@@ -80,6 +81,10 @@ export const ExpressionRendererImplementation = ({
     const subs: Subscription[] = [];
     expressionLoaderRef.current = new ExpressionLoader(mountpoint.current!, expression, {
       ...expressionLoaderOptions,
+      extraHandlers: {
+        ...extraHandlers,
+        getExpression: () => expression,
+      },
       // react component wrapper provides different
       // error handling api which is easier to work with from react
       // if custom renderError is not provided then we fallback to default error handling from ExpressionLoader
@@ -128,7 +133,13 @@ export const ExpressionRendererImplementation = ({
   useShallowCompareEffect(
     () => {
       if (expressionLoaderRef.current) {
-        expressionLoaderRef.current.update(expression, expressionLoaderOptions);
+        expressionLoaderRef.current.update(expression, {
+          ...expressionLoaderOptions,
+          extraHandlers: {
+            ...extraHandlers,
+            getExpression: () => expression,
+          },
+        });
       }
     },
     // when expression is changed by reference and when any other loaderOption is changed by reference

@@ -113,6 +113,7 @@ export class Embeddable extends AbstractEmbeddable<LensEmbeddableInput, LensEmbe
         ExpressionRenderer={this.expressionRenderer}
         expression={this.savedVis.expression}
         context={this.currentContext}
+        extraHandlers={{ embeddable: this }}
       />,
       domNode
     );

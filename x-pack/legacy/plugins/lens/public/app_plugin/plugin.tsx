@@ -19,6 +19,7 @@ import { HashRouter, Switch, Route, RouteComponentProps } from 'react-router-dom
 import { render, unmountComponentAtNode } from 'react-dom';
 import { CoreSetup, CoreStart, SavedObjectsClientContract } from 'src/core/public';
 import { DataPublicPluginStart } from 'src/plugins/data/public';
+import { UiActionsPlugin } from 'src/plugins/ui_actions/public/plugin';
 import { DataStart } from '../../../../../../src/legacy/core_plugins/data/public';
 import { Storage } from '../../../../../../src/plugins/kibana_utils/public';
 import { editorFrameSetup, editorFrameStart, editorFrameStop } from '../editor_frame_plugin';
@@ -44,6 +45,7 @@ import { EditorFrameStart } from '../types';
 
 export interface LensPluginSetupDependencies {
   kibana_legacy: KibanaLegacySetup;
+  uiActions: UiActionsPlugin['setup'];
 }
 
 export interface LensPluginStartDependencies {
@@ -61,7 +63,7 @@ export class AppPlugin {
 
   constructor() {}
 
-  setup(core: CoreSetup, { kibana_legacy }: LensPluginSetupDependencies) {
+  setup(core: CoreSetup, { kibana_legacy, uiActions }: LensPluginSetupDependencies) {
     // TODO: These plugins should not be called from the top level, but since this is the
     // entry point to the app we have no choice until the new platform is ready
     const indexPattern = indexPatternDatasourceSetup();

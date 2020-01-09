@@ -27,6 +27,11 @@ import {
   ExpressionFunction,
   KibanaDatatableColumn,
 } from 'src/plugins/expressions/public';
+import { npStart } from 'ui/new_platform';
+import uuid from 'uuid';
+import { createAction } from '../../../../../../plugins/ui_actions/public';
+import { IEmbeddable, CONTEXT_MENU_TRIGGER } from '../../../../../../plugins/embeddable/public';
+import { DATATABLE_CLICK_TRIGGER } from '../../../../../../plugins/expressions/public/actions/datatable_click_trigger';
 import {
   Query,
   TimeRange,
@@ -258,7 +263,7 @@ export const esaggs = (): ExpressionFunction<typeof name, Context, Arguments, Re
       help: '',
     },
   },
-  async fn(context, args, { inspectorAdapters, abortSignal }) {
+  async fn(context, args, { inspectorAdapters, abortSignal, embeddable, onDestroy }) {
     const indexPatterns = getIndexPatterns();
     const { filterManager } = getQueryService();
 
@@ -285,13 +290,46 @@ export const esaggs = (): ExpressionFunction<typeof name, Context, Arguments, Re
       abortSignal: (abortSignal as unknown) as AbortSignal,
     });
 
+    const createSearchAlertAction = createAction<{ embeddable: IEmbeddable }>({
+      type: uuid.v4(),
+      getDisplayName: () => 'Create alert from a search',
+      isCompatible: async context => {
+        return context.embeddable === embeddable;
+      },
+      execute: async context => {
+        const str = `Open create alert flyout with this search source information:
+        ${JSON.stringify(searchSource)}.
+      `;
+        window.alert(str);
+      },
+    });
+    npStart.plugins.uiActions.attachAction(CONTEXT_MENU_TRIGGER, createSearchAlertAction.id);
+    npStart.plugins.uiActions.registerAction(createSearchAlertAction);
+
+    // TODO: something like this to detach and destroy the dynamic action when this embeddale is no longer on the screen.
+    // embeddable.destroy = () => {
+    //   npStart.plugins.uiActions.detachAction(CONTEXT_MENU_TRIGGER, thresholdAction.id);
+    //   npStart.plugins.uiActions.deRegisterAction(thresholdAction);
+    // };
+
     const table: KibanaDatatable = {
       type: 'kibana_datatable',
       rows: response.rows,
       columns: response.columns.map((column: any) => {
+        console.log('column is ', column);
+        const triggers = [];
+        if (column.aggConfig.type.createFilter) {
+          triggers.push({
+            type: DATATABLE_CLICK_TRIGGER,
+            extraContext: {
+              createFilterFn: (key: string) => column.aggConfig.createFilter(key),
+            },
+          });
+        }
         const cleanedColumn: KibanaDatatableColumn = {
           id: column.id,
           name: column.name,
+          triggers,
         };
         if (args.includeFormatHints) {
           cleanedColumn.formatHint = createFormat(column.aggConfig);

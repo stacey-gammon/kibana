@@ -20,12 +20,14 @@ export interface ExpressionWrapperProps {
     filters?: esFilters.Filter[];
     lastReloadRequestTime?: number;
   };
+  extraHandlers?: { [key: string]: unknown };
 }
 
 export function ExpressionWrapper({
   ExpressionRenderer: ExpressionRendererComponent,
   expression,
   context,
+  extraHandlers,
 }: ExpressionWrapperProps) {
   return (
     <I18nProvider>
@@ -49,6 +51,7 @@ export function ExpressionWrapper({
             className="lnsExpressionRenderer__component"
             padding="m"
             expression={expression}
+            extraHandlers={extraHandlers}
             searchContext={{ ...context, type: 'kibana_context' }}
             renderError={error => <div data-test-subj="expression-renderer-error">{error}</div>}
           />

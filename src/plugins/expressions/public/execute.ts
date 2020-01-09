@@ -57,7 +57,37 @@ export class ExpressionDataHandler {
       ...params.searchContext,
     });
 
+    const getExpression = () => {
+      return this.ast;
+    };
+
     const defaultContext = { type: 'null' };
+
+    // if (params.extraHandlers?.embeddable) {
+    //   const thresholdAction = createAction<{ embeddable: IEmbeddable }>({
+    //     type: uuid.v4(),
+    //     getDisplayName: () => 'Create alert from expression',
+    //     isCompatible: async context => {
+    //       return context.embeddable === handlers.embeddable;
+    //     },
+    //     execute: async context => {
+    //       const str = `Open create alert flyout with this information:
+    //     ${JSON.stringify(data.tables)} and the expression to execute on the server:
+    //     ${handlers.getExpression()} and initial context:
+    //     ${handlers.getInitialContext()}
+    //   `;
+    //       window.alert(str);
+    //     },
+    //   });
+    //   npStart.plugins.uiActions.attachAction(CONTEXT_MENU_TRIGGER, thresholdAction.id);
+    //   npStart.plugins.uiActions.registerAction(thresholdAction);
+
+    //   handlers.onDestroy(() => {
+    //     npStart.plugins.uiActions.detachAction(CONTEXT_MENU_TRIGGER, thresholdAction.id);
+    //     // TODO:
+    //     // npStart.plugins.uiActions.deRegisterAction(thresholdAction);
+    //   });
+    // }
 
     const interpreter = getInterpreter();
     this.promise = interpreter
@@ -65,6 +95,8 @@ export class ExpressionDataHandler {
         getInitialContext,
         inspectorAdapters: this.inspectorAdapters,
         abortSignal: this.abortController.signal,
+        getExpression: this.getExpression,
+        ...params.extraHandlers,
       })
       .then(
         (v: IInterpreterResult) => {

@@ -218,6 +218,7 @@ export interface XYState {
   preferredSeriesType: SeriesType;
   legend: LegendConfig;
   layers: LayerConfig[];
+  actions: { [key: string]: any };
 }
 
 export type State = XYState;

@@ -18,6 +18,7 @@
  */
 
 import { map } from 'lodash';
+import { Filter } from 'src/plugins/data/common/es_query/filters';
 import { SerializedFieldFormat } from '../types/common';
 import { Datatable, PointSeries } from '.';
 
@@ -27,6 +28,14 @@ export interface KibanaDatatableColumn {
   id: string;
   name: string;
   formatHint?: SerializedFieldFormat;
+  triggers?: [
+    {
+      type: string;
+      extraContext?: { [key: string]: unknown };
+    }
+  ];
+  createFilter?: (key: string) => Filter[];
+  thresholdValue?: number;
 }
 
 export interface KibanaDatatableRow {

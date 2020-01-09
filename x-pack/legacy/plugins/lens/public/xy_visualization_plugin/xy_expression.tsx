@@ -29,6 +29,16 @@ import { EuiIcon, EuiText, IconType, EuiSpacer } from '@elastic/eui';
 import { FormattedMessage } from '@kbn/i18n/react';
 import { i18n } from '@kbn/i18n';
 import { EUI_CHARTS_THEME_DARK, EUI_CHARTS_THEME_LIGHT } from '@elastic/eui/dist/eui_charts_theme';
+import { ChartStore } from '@elastic/charts/dist/chart_types/xy_chart/store/chart_state';
+import { npStart } from 'ui/new_platform';
+import uuid from 'uuid';
+import {
+  APPLY_FILTER_TRIGGER,
+  IEmbeddable,
+  CONTEXT_MENU_TRIGGER,
+} from '../../../../../../src/plugins/embeddable/public';
+import { createAction } from '../../../../../../src/plugins/ui_actions/public';
+import { DATATABLE_CLICK_TRIGGER } from '../../../../../../src/plugins/expressions/public/actions/datatable_click_trigger';
 import { FormatFactory } from '../../../../../../src/legacy/ui/public/visualize/loader/pipeline_helpers/utilities';
 import { LensMultiTable } from '../types';
 import { XYArgs, SeriesType, visualizationTypes } from './types';
@@ -52,6 +62,7 @@ export interface XYRender {
 type XYChartRenderProps = XYChartProps & {
   formatFactory: FormatFactory;
   timeZone: string;
+  handlers: Record<string, any>;
 };
 
 export const xyChart: ExpressionFunction<'lens_xy_chart', LensMultiTable, XYArgs, XYRender> = ({
@@ -112,7 +123,7 @@ export const getXyChartRenderer = (dependencies: {
     handlers.onDestroy(() => ReactDOM.unmountComponentAtNode(domNode));
     ReactDOM.render(
       <I18nProvider>
-        <XYChartReportable {...config} {...dependencies} />
+        <XYChartReportable {...config} {...dependencies} handlers={handlers} />
       </I18nProvider>,
       domNode,
       () => handlers.done()
@@ -144,7 +155,7 @@ export function XYChartReportable(props: XYChartRenderProps) {
   );
 }
 
-export function XYChart({ data, args, formatFactory, timeZone }: XYChartRenderProps) {
+export function XYChart({ data, args, formatFactory, timeZone, handlers }: XYChartRenderProps) {
   const { legend, layers } = args;
 
   if (Object.values(data.tables).every(table => table.rows.length === 0)) {
@@ -186,9 +197,63 @@ export function XYChart({ data, args, formatFactory, timeZone }: XYChartRenderPr
 
   const xTitle = (xAxisColumn && xAxisColumn.name) || args.xTitle;
 
+  const thresholdAction = createAction<{ embeddable: IEmbeddable }>({
+    type: uuid.v4(),
+    getDisplayName: () => 'Create alert from expression',
+    isCompatible: async context => {
+      return context.embeddable === handlers.embeddable;
+    },
+    execute: async context => {
+      const str = `Open create alert flyout with this information:
+        ${JSON.stringify(data.tables)} and the expression to execute on the server: 
+        ${handlers.getExpression()} and initial context:
+        ${handlers.getInitialContext()}
+      `;
+      window.alert(str);
+    },
+  });
+  npStart.plugins.uiActions.attachAction(CONTEXT_MENU_TRIGGER, thresholdAction.id);
+  npStart.plugins.uiActions.registerAction(thresholdAction);
+
+  handlers.onDestroy(() => {
+    npStart.plugins.uiActions.detachAction(CONTEXT_MENU_TRIGGER, thresholdAction.id);
+    // TODO:
+    // npStart.plugins.uiActions.deRegisterAction(thresholdAction);
+  });
+
+  const alertSeriesRows = [];
+
+  // const alertSeriesProps = {
+  //   key: 'alertSeries',
+  //   stackAccessors: [],
+  //   id: 'alertSeries',
+  //   xAccessor,
+  //   yAccessors,
+  //   data: sanitized.rows,
+  //   xScaleType,
+  //   yScaleType,
+  //   timeZone,
+  // };
+
   return (
     <Chart>
       <Settings
+        onElementClick={d => {
+          const xAxisColumn1 = Object.values(data.tables)[0].columns.find(
+            ({ id }) => id === layers[0].xAccessor
+          );
+          const clickTrigger = xAxisColumn1?.triggers?.find(
+            t => t.type === DATATABLE_CLICK_TRIGGER
+          );
+
+          if (clickTrigger) {
+            const filter = clickTrigger.extraContext?.createFilterFn(d[0].x);
+            npStart.plugins.uiActions.executeTriggerActions(APPLY_FILTER_TRIGGER, {
+              filters: [filter],
+              embeddable: handlers.embeddable,
+            });
+          }
+        }}
         showLegend={legend.isVisible ? chartHasMoreThanOneSeries : legend.isVisible}
         legendPosition={legend.position}
         showLegendDisplayValue={false}
@@ -256,6 +321,29 @@ export function XYChart({ data, args, formatFactory, timeZone }: XYChartRenderPr
             table: data.tables[layerId],
           });
 
+          // const table = data.tables[layerId];
+          // const column = table.columns.find(c => c.id === splitAccessor);
+          // // column!.thresholdValue = 600;
+
+          // if (column?.thresholdValue) {
+          //   sanitized.rows.forEach(row => {
+          //     yAccessors.forEach(y => {
+          //       const rowVal = row[y];
+          //       if (rowVal > column.thresholdValue) {
+          //         const r = row;
+          //         alertSeriesRows.push(r);
+          //       }
+          //     });
+          //   });
+          //   console.log('rows is ', sanitized.rows);
+          // }
+
+          const chartStore = new ChartStore(getSpecId(idForLegend) + '');
+          chartStore.onElementClickListener = e => {
+            console.log('series clicked: ', e);
+            console.log('data.tables[layerId]: ', data.tables[layerId]);
+          };
+
           const seriesProps = {
             key: index,
             splitSeriesAccessors: sanitized.splitAccessor ? [sanitized.splitAccessor] : [],
@@ -269,6 +357,8 @@ export function XYChart({ data, args, formatFactory, timeZone }: XYChartRenderPr
             enableHistogramMode: isHistogram && (seriesType.includes('stacked') || !splitAccessor),
             timeZone,
           };
+
+          console.log('seriesProps ', seriesProps);
 
           return seriesType === 'line' ? (
             <LineSeries {...seriesProps} />
