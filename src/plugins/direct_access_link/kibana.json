@@ -1,0 +1,8 @@
+{
+  "id": "directAccessLink",
+  "version": "kibana",
+  "server": false,
+  "ui": true,
+  "requiredPlugins": [
+  ]
+}

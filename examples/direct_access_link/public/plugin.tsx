@@ -1,0 +1,47 @@
+/*
+ * Licensed to Elasticsearch B.V. under one or more contributor
+ * license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright
+ * ownership. Elasticsearch B.V. licenses this file to you under
+ * the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import { DirectAccessLinkSetup, DirectAccessLinkStart } from '../../../src/plugins/direct_access_link/public';
+import { Plugin, CoreSetup, CoreStart, AppMountParameters } from '../../../src/core/public';
+
+interface LinkExamplesSetupDependencies {
+  directAccessLinks: DirectAccessLinkSetup;
+}
+
+interface LinkExamplesStartDeps {
+  directAccessLinks: DirectAccessLinkStart;
+}
+
+export class LinkExamplesPlugin implements Plugin<void, void, LinkExamplesSetupDependencies> {
+  public setup(core: CoreSetup<>, deps: LinkExamplesSetupDependencies) {
+    core.application.register({
+      id: 'embeddableExplorer',
+      title: 'Embeddable explorer',
+      async mount(params: AppMountParameters) {
+        const [coreStart, depsStart] = await core.getStartServices();
+        const { renderApp } = await import('./app');
+        return renderApp(coreStart, depsStart., params);
+      },
+    });
+  }
+
+  public start(core: CoreStart) {}
+
+  public stop() {}
+}
