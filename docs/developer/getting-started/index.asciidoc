@@ -3,7 +3,7 @@
 
 Get started building your own plugins, or contributing directly to the {kib} repo.
 
-[float]
+[discrete]
 [[get-kibana-code]]
 === Get the code
 
@@ -15,7 +15,8 @@ git clone https://github.com/[YOUR_USERNAME]/kibana.git kibana
 cd kibana
 ----
 
-[float]
+[discrete]
+[[development-getting-started-dependencies]]
 === Install dependencies
 
 Install the version of Node.js listed in the `.node-version` file. This
@@ -67,11 +68,12 @@ corrupted packages in your yarn cache which you can clean with;
 yarn cache clean
 ----
 
-[float]
+[discrete]
+[[development-getting-started-env-settings]]
 === Configure environmental settings
 
+[discrete]
 [[increase-nodejs-heap-size]]
-[float]
 ==== Increase node.js heap size
 
 {kib} is a big project and for some commands it can happen that the
@@ -81,7 +83,8 @@ by setting the `--max_old_space_size` option on the command line. To set
 the limit for all commands, simply add the following line to your shell
 config: `export NODE_OPTIONS="--max_old_space_size=2048"`.
 
-[float]
+[discrete]
+[[development-getting-started-elasticsearch]]
 === Run Elasticsearch
 
 Run the latest Elasticsearch snapshot. Specify an optional license with the `--license` flag.
@@ -96,7 +99,8 @@ yarn es snapshot --license trial
 Read about more options for <<running-elasticsearch>>, like connecting to a remote host, running from source, 
 preserving data inbetween runs, running remote cluster, etc. 
 
-[float]
+[discrete]
+[[development-getting-started-kibana]]
 === Run {kib}
 
 In another terminal window, start up {kib}. Include developer examples by adding an optional `--run-examples` flag.  
@@ -110,13 +114,15 @@ View all available options by running `yarn start --help`
 
 Read about more advanced options for <<running-kibana-advanced>>.
 
-[float]
+[discrete]
+[[development-getting-started-next-steps]]
 === Code away!
 
 You are now ready to start developing. Changes to your files should be picked up automatically. Server side changes will
 cause the {kib} server to reboot.
 
-[float]
+[discrete]
+[[development-getting-started-links]]
 === More information
 
 * <<running-kibana-advanced>>
@@ -130,15 +136,3 @@ cause the {kib} server to reboot.
 * <<building-kibana>>
 
 * <<development-plugin-resources>>
-
-include::running-kibana-advanced.asciidoc[]
-
-include::sample-data.asciidoc[]
-
-include::debugging.asciidoc[]
-
-include::sass.asciidoc[]
-
-include::building-kibana.asciidoc[]
-
-include::development-plugin-resources.asciidoc[]

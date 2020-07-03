@@ -1,5 +1,5 @@
 [[kibana-sass]]
-=== Styling with SASS
+== Styling with SASS
 
 When writing a new component, create a sibling SASS file of the same
 name and import directly into the JS/TS component file. Doing so ensures
