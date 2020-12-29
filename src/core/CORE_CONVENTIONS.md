@@ -2,6 +2,7 @@
   - [1. Exposing API Types](#1-exposing-api-types)
   - [2. API Structure and nesting](#2-api-structure-and-nesting)
   - [3. Tests and mocks](#3-tests-and-mocks)
+  - [4. Definition of done](#4-definition-of-done)
 
 # Core Conventions
 
@@ -138,3 +139,28 @@ area of Core API's and does not apply to internal types.
    > Why? Without the temporary variable, Jest types the `start` function as
    > `jest<any, any>` and, as a result, doesn't typecheck the mock return
    > value.
+
+## 4. Definition of done
+Definition of done for a feature:
+- has a dedicated Github issue describing problem space
+- an umbrella task closed/updated with follow-ups
+- all code review comments are resolved
+- has been verified manually by at least one reviewer
+- can be used by first & third party plugins
+- there is no contradiction between client and server API
+- works for OSS version
+   - works with and without a `server.basePath` configured
+   - cannot crash the Kibana server when it fails
+- works for the commercial version with a license
+   - for a logged-in user
+   - for anonymous user
+   - compatible with Spaces
+- has unit & integration tests for public contracts
+- has functional tests for user scenarios
+- uses standard tooling:
+    - code - `TypeScript`
+    - UI - `React`
+    - tests - `jest` & `FTR`
+- has documentation for the public contract, provides a usage example
+
+

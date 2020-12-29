@@ -1,14 +1,33 @@
+---
+id: kibCoreServices
+slug: /kibana-team/core-services
+title: Core services
+summary: Core services provides the platform on which the plugin system lives, as well as exposing fundamental services that plugins can use to add applications and functionality.
+date: 2020-12-22
+tags: ['kibana','dev',]
+---
+
 # Core
 
-Core is a set of systems (frontend, backend etc.) that Kibana and its plugins are built on top of.
+Core is a set of systems (frontend, backend etc.) that Kibana and its plugins are built on top of. Core
+functionality is available to plugins via the first parameter of their `setup` and `start` lifecylce
+contracts.
+
+Core offers the following set of services:
+
+- Saved objects
+- Http
+- Routing
+- Application registration
+- Notifications, toasts, overlays, modals and flyouts
+- Chrome
 
 ## Plugin development
+
 Core Plugin API Documentation:
- - [Core Public API](/docs/development/core/public/kibana-plugin-core-public.md)
- - [Core Server API](/docs/development/core/server/kibana-plugin-core-server.md)
- - [Conventions for Plugins](./CONVENTIONS.md)
- - [Testing Kibana Plugins](./TESTING.md)
- - [Kibana Platform Plugin API](./docs/developer/architecture/kibana-platform-plugin-api.asciidoc )
+ - <DocLink id="kibCorePluginArch"/>
+ - <DocLink id="kibCoreTestingPlugins"/>
+ - [Kibana Platform Plugin API](https://www.elastic.co/guide/en/kibana/current/kibana-platform-plugin-api.html)
  
 Internal Documentation:
  - [Saved Objects Migrations](./server/saved_objects/migrations/README.md)
