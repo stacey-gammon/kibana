@@ -1699,7 +1699,7 @@
         "children": [],
         "source": {
           "path": "x-pack/plugins/fleet/server/errors/index.ts",
-          "lineNumber": 34
+          "lineNumber": 37
         },
         "initialIsOpen": false
       }
@@ -2062,6 +2062,303 @@
         "initialIsOpen": false
       },
       {
+        "id": "def-server.Artifact",
+        "type": "Interface",
+        "label": "Artifact",
+        "signature": [
+          {
+            "pluginId": "fleet",
+            "scope": "server",
+            "docId": "kibFleetPluginApi",
+            "section": "def-server.Artifact",
+            "text": "Artifact"
+          },
+          " extends ",
+          "NewArtifact"
+        ],
+        "description": [],
+        "tags": [],
+        "children": [
+          {
+            "tags": [],
+            "id": "def-server.Artifact.id",
+            "type": "string",
+            "label": "id",
+            "description": [],
+            "source": {
+              "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+              "lineNumber": 34
+            }
+          },
+          {
+            "tags": [],
+            "id": "def-server.Artifact.created",
+            "type": "string",
+            "label": "created",
+            "description": [],
+            "source": {
+              "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+              "lineNumber": 35
+            }
+          }
+        ],
+        "source": {
+          "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+          "lineNumber": 33
+        },
+        "initialIsOpen": false
+      },
+      {
+        "id": "def-server.ArtifactsClientInterface",
+        "type": "Interface",
+        "label": "ArtifactsClientInterface",
+        "description": [
+          "\nThe interface exposed out of Fleet's Artifact service via the client class"
+        ],
+        "tags": [],
+        "children": [
+          {
+            "id": "def-server.ArtifactsClientInterface.getArtifact",
+            "type": "Function",
+            "label": "getArtifact",
+            "signature": [
+              "(id: string) => Promise<",
+              {
+                "pluginId": "fleet",
+                "scope": "server",
+                "docId": "kibFleetPluginApi",
+                "section": "def-server.Artifact",
+                "text": "Artifact"
+              },
+              " | undefined>"
+            ],
+            "description": [],
+            "children": [
+              {
+                "type": "string",
+                "label": "id",
+                "isRequired": true,
+                "signature": [
+                  "string"
+                ],
+                "description": [],
+                "source": {
+                  "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+                  "lineNumber": 68
+                }
+              }
+            ],
+            "tags": [],
+            "returnComment": [],
+            "source": {
+              "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+              "lineNumber": 68
+            }
+          },
+          {
+            "id": "def-server.ArtifactsClientInterface.createArtifact",
+            "type": "Function",
+            "label": "createArtifact",
+            "signature": [
+              "(options: ",
+              {
+                "pluginId": "fleet",
+                "scope": "server",
+                "docId": "kibFleetPluginApi",
+                "section": "def-server.ArtifactsClientCreateOptions",
+                "text": "ArtifactsClientCreateOptions"
+              },
+              ") => Promise<",
+              {
+                "pluginId": "fleet",
+                "scope": "server",
+                "docId": "kibFleetPluginApi",
+                "section": "def-server.Artifact",
+                "text": "Artifact"
+              },
+              ">"
+            ],
+            "description": [],
+            "children": [
+              {
+                "type": "CompoundType",
+                "label": "options",
+                "isRequired": true,
+                "signature": [
+                  {
+                    "pluginId": "fleet",
+                    "scope": "server",
+                    "docId": "kibFleetPluginApi",
+                    "section": "def-server.ArtifactsClientCreateOptions",
+                    "text": "ArtifactsClientCreateOptions"
+                  }
+                ],
+                "description": [],
+                "source": {
+                  "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+                  "lineNumber": 69
+                }
+              }
+            ],
+            "tags": [],
+            "returnComment": [],
+            "source": {
+              "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+              "lineNumber": 69
+            }
+          },
+          {
+            "id": "def-server.ArtifactsClientInterface.deleteArtifact",
+            "type": "Function",
+            "label": "deleteArtifact",
+            "signature": [
+              "(id: string) => Promise<void>"
+            ],
+            "description": [],
+            "children": [
+              {
+                "type": "string",
+                "label": "id",
+                "isRequired": true,
+                "signature": [
+                  "string"
+                ],
+                "description": [],
+                "source": {
+                  "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+                  "lineNumber": 70
+                }
+              }
+            ],
+            "tags": [],
+            "returnComment": [],
+            "source": {
+              "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+              "lineNumber": 70
+            }
+          },
+          {
+            "id": "def-server.ArtifactsClientInterface.listArtifacts",
+            "type": "Function",
+            "label": "listArtifacts",
+            "signature": [
+              "(options?: Readonly<{ page?: number | undefined; perPage?: number | undefined; sortField?: string | undefined; sortOrder?: \"asc\" | \"desc\" | undefined; kuery?: any; showUpgradeable?: boolean | undefined; } & {}> | undefined) => Promise<",
+              {
+                "pluginId": "fleet",
+                "scope": "common",
+                "docId": "kibFleetPluginApi",
+                "section": "def-common.ListResult",
+                "text": "ListResult"
+              },
+              "<",
+              {
+                "pluginId": "fleet",
+                "scope": "server",
+                "docId": "kibFleetPluginApi",
+                "section": "def-server.Artifact",
+                "text": "Artifact"
+              },
+              ">>"
+            ],
+            "description": [],
+            "children": [
+              {
+                "type": "Object",
+                "label": "options",
+                "isRequired": false,
+                "signature": [
+                  "Readonly<{ page?: number | undefined; perPage?: number | undefined; sortField?: string | undefined; sortOrder?: \"asc\" | \"desc\" | undefined; kuery?: any; showUpgradeable?: boolean | undefined; } & {}> | undefined"
+                ],
+                "description": [],
+                "source": {
+                  "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+                  "lineNumber": 71
+                }
+              }
+            ],
+            "tags": [],
+            "returnComment": [],
+            "source": {
+              "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+              "lineNumber": 71
+            }
+          },
+          {
+            "id": "def-server.ArtifactsClientInterface.encodeContent",
+            "type": "Function",
+            "label": "encodeContent",
+            "signature": [
+              "(content: string) => Promise<Pick<",
+              {
+                "pluginId": "fleet",
+                "scope": "server",
+                "docId": "kibFleetPluginApi",
+                "section": "def-server.Artifact",
+                "text": "Artifact"
+              },
+              ", \"body\" | \"decodedSha256\" | \"decodedSize\" | \"encodedSha256\" | \"encodedSize\" | \"compressionAlgorithm\">>"
+            ],
+            "description": [],
+            "children": [
+              {
+                "type": "string",
+                "label": "content",
+                "isRequired": true,
+                "signature": [
+                  "string"
+                ],
+                "description": [],
+                "source": {
+                  "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+                  "lineNumber": 72
+                }
+              }
+            ],
+            "tags": [],
+            "returnComment": [],
+            "source": {
+              "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+              "lineNumber": 72
+            }
+          },
+          {
+            "id": "def-server.ArtifactsClientInterface.generateHash",
+            "type": "Function",
+            "label": "generateHash",
+            "signature": [
+              "(content: string) => string"
+            ],
+            "description": [],
+            "children": [
+              {
+                "type": "string",
+                "label": "content",
+                "isRequired": true,
+                "signature": [
+                  "string"
+                ],
+                "description": [],
+                "source": {
+                  "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+                  "lineNumber": 73
+                }
+              }
+            ],
+            "tags": [],
+            "returnComment": [],
+            "source": {
+              "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+              "lineNumber": 73
+            }
+          }
+        ],
+        "source": {
+          "path": "x-pack/plugins/fleet/server/services/artifacts/types.ts",
+          "lineNumber": 67
+        },
+        "initialIsOpen": false
+      },
+      {
         "id": "def-server.ESIndexPatternService",
         "type": "Interface",
         "label": "ESIndexPatternService",
@@ -2164,7 +2461,7 @@
             "description": [],
             "source": {
               "path": "x-pack/plugins/fleet/server/plugin.ts",
-              "lineNumber": 91
+              "lineNumber": 92
             },
             "signature": [
               {
@@ -2184,7 +2481,7 @@
             "description": [],
             "source": {
               "path": "x-pack/plugins/fleet/server/plugin.ts",
-              "lineNumber": 92
+              "lineNumber": 93
             },
             "signature": [
               {
@@ -2205,7 +2502,7 @@
             "description": [],
             "source": {
               "path": "x-pack/plugins/fleet/server/plugin.ts",
-              "lineNumber": 93
+              "lineNumber": 94
             },
             "signature": [
               {
@@ -2226,7 +2523,7 @@
             "description": [],
             "source": {
               "path": "x-pack/plugins/fleet/server/plugin.ts",
-              "lineNumber": 94
+              "lineNumber": 95
             },
             "signature": [
               {
@@ -2246,7 +2543,7 @@
             "description": [],
             "source": {
               "path": "x-pack/plugins/fleet/server/plugin.ts",
-              "lineNumber": 95
+              "lineNumber": 96
             },
             "signature": [
               {
@@ -2267,7 +2564,7 @@
             "description": [],
             "source": {
               "path": "x-pack/plugins/fleet/server/plugin.ts",
-              "lineNumber": 96
+              "lineNumber": 97
             },
             "signature": [
               "Pick<",
@@ -2284,7 +2581,7 @@
         ],
         "source": {
           "path": "x-pack/plugins/fleet/server/plugin.ts",
-          "lineNumber": 90
+          "lineNumber": 91
         },
         "initialIsOpen": false
       },
@@ -2384,7 +2681,7 @@
         ],
         "source": {
           "path": "x-pack/plugins/fleet/server/plugin.ts",
-          "lineNumber": 134
+          "lineNumber": 135
         },
         "signature": [
           "[\"packagePolicyCreate\", (newPackagePolicy: ",
@@ -2438,7 +2735,7 @@
         "description": [],
         "source": {
           "path": "x-pack/plugins/fleet/server/index.ts",
-          "lineNumber": 76
+          "lineNumber": 78
         },
         "signature": [
           "any"
@@ -2486,7 +2783,7 @@
       "description": [],
       "source": {
         "path": "x-pack/plugins/fleet/server/plugin.ts",
-        "lineNumber": 119
+        "lineNumber": 120
       },
       "signature": [
         "void"
@@ -2511,7 +2808,7 @@
           "description": [],
           "source": {
             "path": "x-pack/plugins/fleet/server/plugin.ts",
-            "lineNumber": 158
+            "lineNumber": 159
           },
           "signature": [
             {
@@ -2531,7 +2828,7 @@
           "description": [],
           "source": {
             "path": "x-pack/plugins/fleet/server/plugin.ts",
-            "lineNumber": 159
+            "lineNumber": 160
           },
           "signature": [
             {
@@ -2551,7 +2848,7 @@
           "description": [],
           "source": {
             "path": "x-pack/plugins/fleet/server/plugin.ts",
-            "lineNumber": 160
+            "lineNumber": 161
           },
           "signature": [
             {
@@ -2573,7 +2870,7 @@
           ],
           "source": {
             "path": "x-pack/plugins/fleet/server/plugin.ts",
-            "lineNumber": 164
+            "lineNumber": 165
           },
           "signature": [
             {
@@ -2593,7 +2890,7 @@
           "description": [],
           "source": {
             "path": "x-pack/plugins/fleet/server/plugin.ts",
-            "lineNumber": 165
+            "lineNumber": 166
           },
           "signature": [
             {
@@ -2615,7 +2912,7 @@
           ],
           "source": {
             "path": "x-pack/plugins/fleet/server/plugin.ts",
-            "lineNumber": 170
+            "lineNumber": 171
           },
           "signature": [
             "(...args: ",
@@ -2628,11 +2925,34 @@
             },
             ") => void"
           ]
+        },
+        {
+          "tags": [],
+          "id": "def-server.FleetStartContract.createArtifactsClient",
+          "type": "Function",
+          "label": "createArtifactsClient",
+          "description": [
+            "\nCreate a Fleet Artifact Client instance"
+          ],
+          "source": {
+            "path": "x-pack/plugins/fleet/server/plugin.ts",
+            "lineNumber": 177
+          },
+          "signature": [
+            "(packageName: string) => ",
+            {
+              "pluginId": "fleet",
+              "scope": "server",
+              "docId": "kibFleetPluginApi",
+              "section": "def-server.FleetArtifactsClient",
+              "text": "FleetArtifactsClient"
+            }
+          ]
         }
       ],
       "source": {
         "path": "x-pack/plugins/fleet/server/plugin.ts",
-        "lineNumber": 157
+        "lineNumber": 158
       },
       "lifecycle": "start",
       "initialIsOpen": true
@@ -12806,13 +13126,28 @@
       },
       {
         "tags": [],
+        "id": "def-common.FLEET_SERVER_ARTIFACTS_INDEX",
+        "type": "string",
+        "label": "FLEET_SERVER_ARTIFACTS_INDEX",
+        "description": [],
+        "source": {
+          "path": "x-pack/plugins/fleet/common/constants/index.ts",
+          "lineNumber": 27
+        },
+        "signature": [
+          "\".fleet-artifacts\""
+        ],
+        "initialIsOpen": false
+      },
+      {
+        "tags": [],
         "id": "def-common.FLEET_SERVER_INDICES",
         "type": "Array",
         "label": "FLEET_SERVER_INDICES",
         "description": [],
         "source": {
           "path": "x-pack/plugins/fleet/common/constants/index.ts",
-          "lineNumber": 27
+          "lineNumber": 29
         },
         "signature": [
           "string[]"
