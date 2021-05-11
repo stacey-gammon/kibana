@@ -963,7 +963,7 @@
               "plugin": "cloud",
               "link": {
                 "path": "x-pack/plugins/cloud/public/plugin.ts",
-                "lineNumber": 67
+                "lineNumber": 66
               }
             },
             {
