@@ -70,24 +70,24 @@ export interface SecurityPluginSetup {
   /**
    * @deprecated Use `authc` methods from the `SecurityServiceStart` contract instead.
    */
-  authc: { getCurrentUser: (request: KibanaRequest) => AuthenticatedUser | null };
+  readonly authc: { getCurrentUser: (request: KibanaRequest) => AuthenticatedUser | null };
   /**
    * @deprecated Use `authz` methods from the `SecurityServiceStart` contract instead.
    */
-  authz: Pick<
+  readonly authz: Pick<
     AuthorizationServiceSetup,
     'actions' | 'checkPrivilegesDynamicallyWithRequest' | 'checkPrivilegesWithRequest' | 'mode'
   >;
-  license: SecurityLicense;
-  audit: AuditServiceSetup;
+  readonly license: SecurityLicense;
+  readonly audit: AuditServiceSetup;
 }
 
 /**
  * Describes public Security plugin contract returned at the `start` stage.
  */
 export interface SecurityPluginStart {
-  authc: Pick<AuthenticationServiceStart, 'apiKeys' | 'getCurrentUser'>;
-  authz: Pick<
+  readonly authc: Pick<AuthenticationServiceStart, 'apiKeys' | 'getCurrentUser'>;
+  readonly authz: Pick<
     AuthorizationServiceSetup,
     'actions' | 'checkPrivilegesDynamicallyWithRequest' | 'checkPrivilegesWithRequest' | 'mode'
   >;
@@ -113,12 +113,7 @@ export interface PluginStartDependencies {
  * Represents Security Plugin instance that will be managed by the Kibana plugin system.
  */
 export class SecurityPlugin
-  implements
-    Plugin<
-      RecursiveReadonly<SecurityPluginSetup>,
-      RecursiveReadonly<SecurityPluginStart>,
-      PluginSetupDependencies
-    > {
+  implements Plugin<SecurityPluginSetup, SecurityPluginStart, PluginSetupDependencies> {
   private readonly logger: Logger;
   private authorizationSetup?: AuthorizationServiceSetup;
   private auditSetup?: AuditServiceSetup;
