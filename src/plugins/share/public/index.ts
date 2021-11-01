@@ -30,6 +30,8 @@ export {
   UrlGeneratorsDefinition,
   UrlGeneratorContract,
   UrlGeneratorsService,
+  UrlGeneratorsStart,
+  UrlGeneratorsSetup,
 } from './url_generators';
 
 export { RedirectOptions } from '../common/url_service';

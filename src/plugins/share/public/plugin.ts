@@ -22,9 +22,12 @@ import { RedirectManager } from './url_service';
 import type { RedirectOptions } from '../common/url_service/locators/redirect';
 import { LegacyShortUrlLocatorDefinition } from '../common/url_service/locators/legacy_short_url_locator';
 import { AnonymousAccessServiceContract } from '../common';
+import { ShareMenuProvider, ShowShareMenuOptions } from '.';
 
 /** @public */
-export type SharePluginSetup = ShareMenuRegistrySetup & {
+export interface SharePluginSetup {
+  register: (shareMenuProvider: ShareMenuProvider) => void;
+
   /**
    * @deprecated
    *
@@ -47,10 +50,12 @@ export type SharePluginSetup = ShareMenuRegistrySetup & {
    * Sets the provider for the anonymous access service; this is consumed by the Security plugin to avoid a circular dependency.
    */
   setAnonymousAccessServiceProvider: (provider: () => AnonymousAccessServiceContract) => void;
-};
+}
 
 /** @public */
-export type SharePluginStart = ShareMenuManagerStart & {
+export interface SharePluginStart {
+  toggleShareContextMenu: (options: ShowShareMenuOptions) => void;
+
   /**
    * @deprecated
    *
@@ -68,7 +73,7 @@ export type SharePluginStart = ShareMenuManagerStart & {
    * the locator, then using the locator to navigate.
    */
   navigate(options: RedirectOptions): void;
-};
+}
 
 export class SharePlugin implements Plugin<SharePluginSetup, SharePluginStart> {
   private readonly shareMenuRegistry = new ShareMenuRegistry();
